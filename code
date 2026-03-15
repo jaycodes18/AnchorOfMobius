@@ -1,0 +1,2569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anchor of Möbius</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --glow: #06b6d4;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'Cormorant Garamond', Georgia, serif;
+  --font-mono: 'DM Mono', monospace;
+  --font-ui: 'DM Sans', sans-serif;
+}
+
+html, body {
+  width: 100%; height: 100%;
+  background: #000;
+  color: #fff;
+  font-family: var(--font-ui);
+  overflow-x: hidden;
+}
+
+#app { width: 100%; min-height: 100vh; position: relative; }
+
+@keyframes float-particle {
+  0%, 100% { transform: translateY(0px) scale(1); opacity: 0.5; }
+  50% { transform: translateY(-20px) scale(1.1); opacity: 1; }
+}
+@keyframes rise-particle {
+  0% { transform: translateY(100vh); opacity: 0; }
+  10% { opacity: 0.7; }
+  90% { opacity: 0.7; }
+  100% { transform: translateY(-20px); opacity: 0; }
+}
+@keyframes pulse-ring { 0%, 100% { opacity: 0.2; transform: scale(1); } 50% { opacity: 0; transform: scale(1.3); } }
+@keyframes shimmer-anim { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+@keyframes fade-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+@keyframes sway { 0%, 100% { transform: rotate(-1.5deg) scaleX(0.98); } 50% { transform: rotate(1.5deg) scaleX(1.02); } }
+@keyframes cloud-drift { 0% { transform: translateX(0); } 100% { transform: translateX(60px); } }
+@keyframes root-pulse { 0%, 100% { opacity: 0.7; filter: brightness(1); } 50% { opacity: 1; filter: brightness(1.3); } }
+@keyframes bubble-rise { 0% { transform: translateY(0) translateX(0); opacity: 0.7; } 100% { transform: translateY(-80px) translateX(10px); opacity: 0; } }
+@keyframes nen-glow { 0%, 100% { box-shadow: 0 0 15px rgba(6,182,212,0.4), 0 0 30px rgba(6,182,212,0.2); } 50% { box-shadow: 0 0 25px rgba(6,182,212,0.7), 0 0 50px rgba(6,182,212,0.4), 0 0 80px rgba(6,182,212,0.2); } }
+@keyframes scan { 0% { top: -5%; } 100% { top: 105%; } }
+@keyframes treasure-pulse { 0%, 100% { transform: scale(1) translateY(0); filter: brightness(1); } 50% { transform: scale(1.04) translateY(-4px); filter: brightness(1.3); } }
+@keyframes treasure-shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-6px) rotate(-2deg); } 40% { transform: translateX(6px) rotate(2deg); } 60% { transform: translateX(-4px) rotate(-1deg); } 80% { transform: translateX(4px) rotate(1deg); } }
+@keyframes golden-burst { 0% { transform: scale(0); opacity: 1; } 100% { transform: scale(3); opacity: 0; } }
+@keyframes particle-explode { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; } }
+@keyframes typewriter { from { width: 0; } to { width: 100%; } }
+@keyframes wave-text { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes island-bob { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
+
+.screen { position: relative; min-height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+.overlay { position: absolute; inset: 0; }
+.content { position: relative; z-index: 10; }
+
+button {
+  font-family: var(--font-ui);
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+button:active { transform: scale(0.97); }
+button:disabled { cursor: default; opacity: 0.5; }
+
+input {
+  font-family: var(--font-mono);
+  background: rgba(0,0,0,0.4);
+  border: 2px solid rgba(255,255,255,0.2);
+  color: #fff;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 1.1rem;
+  text-align: center;
+  outline: none;
+  text-transform: uppercase;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+input:focus { border-color: var(--glow); box-shadow: 0 0 0 3px color-mix(in srgb, var(--glow) 20%, transparent); }
+
+/* HUD */
+.hud {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(12px);
+  flex-shrink: 0;
+}
+.hud-label { font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.35); font-family: var(--font-mono); }
+.hud-value { font-family: var(--font-mono); font-size: 0.875rem; color: rgba(255,255,255,0.85); }
+
+/* Nen gauge */
+.nen-gauge {
+  display: flex; align-items: center; gap: 8px;
+}
+.nen-bar-bg { height: 8px; width: 120px; background: rgba(0,0,0,0.6); border-radius: 99px; overflow: hidden; border: 1px solid rgba(6,182,212,0.2); }
+.nen-bar { height: 100%; border-radius: 99px; transition: width 1s linear; background: linear-gradient(to right, #06b6d4, #22d3ee); box-shadow: 0 0 8px rgba(6,182,212,0.6); }
+
+/* Challenge card */
+.challenge-card {
+  background: rgba(0,0,0,0.55);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 1.25rem;
+  padding: 2rem;
+  backdrop-filter: blur(16px);
+  max-width: 680px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+/* Timer */
+.timer-wrap { display: flex; align-items: center; gap: 0.75rem; }
+.timer-bar-bg { height: 5px; width: 140px; background: rgba(0,0,0,0.6); border-radius: 99px; overflow: hidden; }
+.timer-bar { height: 100%; border-radius: 99px; transition: width 1s linear, background-color 0.5s; }
+.timer-text { font-family: var(--font-mono); font-weight: 700; font-size: 1rem; min-width: 3.5ch; }
+
+/* Progress dots */
+.dots { display: flex; align-items: center; gap: 6px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.2); transition: all 0.3s; }
+
+/* Memory match */
+.memory-grid { display: grid; gap: 8px; justify-content: center; }
+.memory-card { perspective: 600px; cursor: pointer; position: relative; }
+.memory-card-inner {
+  width: 100%; height: 100%;
+  position: relative; transform-style: preserve-3d;
+  transition: transform 0.4s cubic-bezier(.25,.8,.25,1);
+  border-radius: 0.5rem;
+}
+.memory-card-inner.flipped { transform: rotateY(180deg); }
+.memory-card-face {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border-radius: 0.5rem; backface-visibility: hidden; border: 2px solid;
+}
+.memory-card-back { background: rgba(0,0,0,0.7); }
+.memory-card-front { transform: rotateY(180deg); }
+
+/* Simon */
+.simon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.simon-pad {
+  width: 130px; height: 130px; border-radius: 1rem; border: 2px solid;
+  font-weight: 700; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase;
+  transition: all 0.15s; display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 4px;
+}
+
+/* Code breaker */
+.cb-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.cb-peg {
+  width: 38px; height: 38px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.15);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.15s;
+  font-size: 0.65rem; font-weight: 700;
+}
+.cb-hint { display: flex; flex-wrap: wrap; gap: 3px; width: 44px; }
+.cb-hint-dot { width: 10px; height: 10px; border-radius: 50%; }
+.cb-color-btn {
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.15);
+  cursor: pointer; transition: all 0.15s;
+  font-weight: 700; font-size: 0.7rem; display: flex; align-items: center; justify-content: center;
+}
+.cb-color-btn:hover { transform: scale(1.15); border-color: rgba(255,255,255,0.6); }
+.cb-color-btn.used { opacity: 0.35; cursor: not-allowed; transform: none !important; }
+
+/* Word scramble */
+.scramble-letters { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.scramble-letter {
+  width: 48px; height: 52px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 0.5rem; border: 2px solid;
+  font-size: 1.3rem; font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+/* Reaction */
+.reaction-arena {
+  position: relative; width: 100%; height: 300px;
+  background: rgba(0,0,0,0.35); border-radius: 0.75rem;
+  border: 1px solid rgba(255,255,255,0.06); overflow: hidden; cursor: crosshair;
+}
+.reaction-target {
+  position: absolute; width: 56px; height: 56px; border-radius: 50%;
+  border: 2px solid; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transform: translate(-50%, -50%);
+  font-size: 1.3rem;
+}
+@keyframes target-spawn { from { transform: translate(-50%,-50%) scale(0); opacity: 0; } to { transform: translate(-50%,-50%) scale(1); opacity: 1; } }
+@keyframes target-pulse { 0%, 100% { box-shadow: 0 0 12px var(--tglow); } 50% { box-shadow: 0 0 30px var(--tglow), 0 0 60px var(--tglow); } }
+
+/* Success overlay */
+.success-overlay {
+  position: fixed; inset: 0; z-index: 999;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);
+}
+.success-box {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  background: rgba(0,0,0,0.9);
+  border: 1px solid; border-radius: 1.25rem;
+  padding: 2.5rem 4rem; backdrop-filter: blur(16px);
+  animation: fade-in-up 0.3s ease;
+}
+
+/* Particles */
+.particles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.particle { position: absolute; border-radius: 50%; }
+
+/* Buttons */
+.btn-primary {
+  position: relative; overflow: hidden;
+  border-radius: 99px; border: 1px solid;
+  padding: 0.9rem 2.5rem;
+  font-size: 1rem; font-weight: 600;
+  color: #fff; letter-spacing: 0.05em;
+  transition: all 0.3s;
+}
+.btn-primary .shimmer {
+  position: absolute; inset: 0;
+  background: linear-gradient(to right, transparent, rgba(255,255,255,0.12), transparent);
+  transform: translateX(-100%);
+}
+.btn-primary:hover .shimmer { animation: shimmer-anim 0.7s forwards; }
+
+/* Skip button — unobtrusive floating pill */
+.btn-skip {
+  position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 50;
+  border-radius: 99px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(10px);
+  color: rgba(255,255,255,0.5);
+  padding: 0.5rem 1.25rem;
+  font-size: 0.75rem; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  font-family: var(--font-mono);
+  cursor: pointer; transition: all 0.2s;
+}
+.btn-skip:hover {
+  border-color: rgba(255,255,255,0.45);
+  color: rgba(255,255,255,0.9);
+  background: rgba(0,0,0,0.75);
+}
+
+/* Scanlines */
+.scanlines {
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.18) 2px, rgba(0,0,0,0.18) 4px);
+  opacity: 0.3; pointer-events: none;
+}
+
+/* Choice buttons */
+.choice-btn {
+  max-width: 300px; display: flex; flex-direction: column; align-items: center; gap: 12px;
+  border: 1px solid; border-radius: 1.25rem; padding: 1.75rem;
+  text-align: center; backdrop-filter: blur(10px);
+  transition: all 0.3s; cursor: pointer;
+  background: transparent;
+}
+
+/* Treasure chest */
+.treasure-wrap {
+  display: flex; flex-direction: column; align-items: center; gap: 1.5rem;
+  position: relative;
+}
+.treasure-chest {
+  cursor: pointer;
+  position: relative;
+  display: flex; flex-direction: column; align-items: center;
+  transition: all 0.3s;
+}
+.treasure-chest:hover { filter: brightness(1.15); }
+
+/* Depth indicator */
+.depth-indicator {
+  position: fixed; right: 20px; top: 50%; transform: translateY(-50%);
+  z-index: 30; display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.depth-track {
+  width: 4px; height: 200px; background: rgba(255,255,255,0.06);
+  border-radius: 99px; position: relative;
+}
+.depth-fill {
+  position: absolute; bottom: 0; left: 0; width: 100%;
+  border-radius: 99px; transition: height 0.5s;
+}
+
+/* Calamity effect */
+.calamity-alert {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: linear-gradient(to bottom, rgba(185,28,28,0.8), transparent);
+  padding: 0.75rem; text-align: center;
+  font-family: var(--font-mono); font-size: 0.75rem;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: #fca5a5; animation: blink 1s ease-in-out 3;
+}
+
+@media (max-width: 600px) {
+  .memory-card { width: 58px !important; height: 58px !important; }
+  .simon-pad { width: 108px; height: 108px; }
+  .timer-bar-bg { width: 90px; }
+  .challenge-card { padding: 1.25rem; }
+  .hud { padding: 0.6rem 0.75rem; }
+  .btn-primary { padding: 0.75rem 1.75rem; }
+  .btn-skip { bottom: 1rem; right: 1rem; }
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ============================================================
+// GAME DATA
+// ============================================================
+const TIMER_SECONDS = 240;
+
+const GAME_LEVELS = [
+  {
+    id: 1, name: "The Sunlit Shallows", subtitle: "Where Light Still Reigns",
+    depthStart: 0, depthEnd: 1000,
+    bgColor: "#0a2a4a",
+    bgGradient: ["#0a2a4a", "#0d3d6b"],
+    glowColor: "#38bdf8",
+    waterOpacity: 0.3,
+    description: "Still warm down here. Sunlight makes it this far, just barely — broken up into columns that shift whenever something big swims through. The coral looks normal at first. Then you see the roots. Big as buildings, older than anything on the surface, and something's been eating them. Black rot spreading up from below. You write down \"fungal\" in your log. You don't really believe it.",
+    creature: "Tropical Fish, Rays & Sea Turtles",
+    calamityName: "Root Decay",
+    calamityDesc: "Rot is spreading up the root membrane faster than it should. Something is feeding it.",
+    creatures: [
+      { emoji: "🐠", name: "Clownfish", y: 0.2, x: 0.15, size: 1 },
+      { emoji: "🐢", name: "Sea Turtle", y: 0.5, x: 0.8, size: 1.4 },
+      { emoji: "🐟", name: "Blue Tang", y: 0.35, x: 0.45, size: 0.9 },
+      { emoji: "🦈", name: "Reef Shark", y: 0.7, x: 0.25, size: 1.6 },
+      { emoji: "🐡", name: "Pufferfish", y: 0.15, x: 0.65, size: 1 },
+      { emoji: "🐙", name: "Octopus", y: 0.8, x: 0.55, size: 1.2 },
+    ],
+    challenges: [
+      { id:"l1c1", type:"memory-match", title:"Root Species Mapping",
+        description:"Sonar's picking up life signs clustered around the root damage. Match what you're seeing before the signal degrades — you'll need a clean read before going deeper.",
+        difficulty:1, params:{pairs:5, creatures:["Clownfish","Sea Turtle","Blue Tang","Seahorse","Starfish"]} },
+      { id:"l1c2", type:"reaction-game", title:"Reef Shark Interference",
+        description:"Something spooked a shark and now it's taking it out on your hull. Hit the impact points and push Nen through the plating before it decides to try harder.",
+        difficulty:1, params:{targetCount:10, spawnInterval:2200, lifetime:3000} },
+      { id:"l1c3", type:"word-scramble", title:"Decrypt the Root Markings",
+        description:"There are carvings on the root. Old ones. You shouldn't be able to read them but the Nen in your eyes is doing something — translating, almost. Work fast before the feeling goes.",
+        difficulty:1, params:{words:[{scrambled:"ALOCR",answer:"CORAL",hint:"Reef-building organism"},{scrambled:"DEPHT",answer:"DEPTH",hint:"Distance downward"},{scrambled:"RONSA",answer:"SONAR",hint:"Sound-based navigation"},{scrambled:"HORCNA",answer:"ANCHOR",hint:"What holds this island in place"}]} }
+    ]
+  },
+  {
+    id: 2, name: "The Fading Light", subtitle: "Shadows Gather at the Edges",
+    depthStart: 1000, depthEnd: 2000,
+    bgColor: "#071e3d",
+    bgGradient: ["#071e3d", "#050f22"],
+    glowColor: "#60a5fa",
+    waterOpacity: 0.55,
+    description: "The sun's gone. There's just this cold blue nothing in every direction, and the roots going down into it like pillars holding up the sky. A squid the size of a house drifts past without noticing you. The rot is different down here — wet, almost luminous. Leaking something that isn't water. You taste metal when you breathe.",
+    creature: "Giant Squid, Oarfish & Twilight Sharks",
+    calamityName: "Pressure Surge",
+    calamityDesc: "A deep current just hit without warning. Hull stress is spiking.",
+    creatures: [
+      { emoji: "🦑", name: "Giant Squid", y: 0.3, x: 0.2, size: 2 },
+      { emoji: "🐋", name: "Sperm Whale", y: 0.6, x: 0.75, size: 2.2 },
+      { emoji: "🐍", name: "Oarfish", y: 0.5, x: 0.5, size: 1.5 },
+      { emoji: "🦈", name: "Blue Shark", y: 0.2, x: 0.7, size: 1.6 },
+      { emoji: "🪼", name: "Moon Jellyfish", y: 0.75, x: 0.3, size: 1.1 },
+    ],
+    challenges: [
+      { id:"l2c1", type:"code-breaker", title:"Pressure Lock Override",
+        description:"Bulkhead sealed itself. Emergency response. The lock runs on Nen frequency — colors can repeat, so pay attention to position, not just what's there.",
+        difficulty:2, params:{codeLength:3, maxAttempts:6, colors:["R","B","G","Y"], allowRepeats:true} },
+      { id:"l2c2", type:"simon-pattern", title:"Sonar Frequency Decode",
+        description:"There's a rhythm in the water. Repeating. Deliberate. Not an animal. Mirror it back and something opens — you don't know what yet, but the instruments are clear.",
+        difficulty:2, params:{startLength:3, maxLength:6} },
+      { id:"l2c3", type:"word-scramble", title:"Twilight Inscriptions",
+        description:"More carvings. Deeper cut than the ones above. Your Nen is translating again but it's slower now, like something down here doesn't want you reading this.",
+        difficulty:2, params:{words:[{scrambled:"ELTNACET",answer:"TENTACLE",hint:"A flexible appendage"},{scrambled:"BAYSS",answer:"ABYSS",hint:"The endless void below"},{scrambled:"LPSUE",answer:"PULSE",hint:"Rhythmic beating"},{scrambled:"NACTINE",answer:"ANCIENT",hint:"Older than civilization"}]} }
+    ]
+  },
+  {
+    id: 3, name: "The Midnight Passage", subtitle: "No Light. No Sound. Only Pressure.",
+    depthStart: 2000, depthEnd: 3000,
+    bgColor: "#040d1a",
+    bgGradient: ["#040d1a", "#030810"],
+    glowColor: "#2dd4bf",
+    waterOpacity: 0.75,
+    description: "No light at all now. The viewport shows nothing until something swims through the beam — and some of those things are big enough that you only see a piece of them. The roots are moving. Not swaying. Breathing. You've been writing notes but you stopped a few minutes ago because you don't know what to write. The bathysphere just groaned. Something noticed the sound.",
+    creature: "Viperfish, Hatchetfish & Dragonfish",
+    calamityName: "Gyo Blindness",
+    calamityDesc: "Your Nen-sight just cut out. Something down here is pushing back.",
+    creatures: [
+      { emoji: "🐟", name: "Hatchetfish", y: 0.25, x: 0.3, size: 0.8 },
+      { emoji: "💀", name: "Viperfish", y: 0.5, x: 0.65, size: 1.2 },
+      { emoji: "🐉", name: "Dragonfish", y: 0.7, x: 0.2, size: 1.4 },
+      { emoji: "💡", name: "Lanternfish", y: 0.15, x: 0.8, size: 0.7 },
+      { emoji: "🫧", name: "Bristlemouth", y: 0.85, x: 0.5, size: 0.9 },
+    ],
+    challenges: [
+      { id:"l3c1", type:"simon-pattern", title:"Emergency Hull Sequence",
+        description:"The hull is vibrating at the wrong frequency — something outside is matching it. Run the dampening sequence through the Nen valves before it finds the resonant pitch.",
+        difficulty:3, params:{startLength:4, maxLength:7} },
+      { id:"l3c2", type:"memory-match", title:"Midnight Fauna Catalog",
+        description:"Nothing down here is in any database. You're cataloguing blind — pair them by the light patterns before your scanner drains. You'll want a record of this. Whatever happens.",
+        difficulty:3, params:{pairs:6, creatures:["Viperfish","Hatchetfish","Dragonfish","Lanternfish","Gulper Eel","Bristlemouth"]} },
+      { id:"l3c3", type:"reaction-game", title:"Predator Swarm",
+        description:"The light drew them. Of course it did. They're small but there are a lot of them and they have teeth like glass. Hit each one before it reaches the hull.",
+        difficulty:3, params:{targetCount:15, spawnInterval:1900, lifetime:2400} }
+    ]
+  },
+  {
+    id: 4, name: "The Living Descent", subtitle: "They Were Never Roots",
+    depthStart: 3000, depthEnd: 4000,
+    bgColor: "#0e0004",
+    bgGradient: ["#140002", "#0a0001"],
+    glowColor: "#ef4444",
+    waterOpacity: 1,
+    description: "You know now. You've known for a few hundred meters, probably. These aren't roots. They never were. They're too warm. They move wrong. The water down here has a weight to it that isn't pressure — it's awareness. Your instruments say you're close to the bottom. You don't think that's what's waiting for you.",
+    creature: "The Entity's Extremities — Vast & Alive",
+    calamityName: "Entity Awakening",
+    calamityDesc: "It knows you're here. Something just shifted below.",
+    creatures: [
+      { emoji: "🌑", name: "Tentacle Mass", y: 0.3, x: 0.3, size: 3 },
+      { emoji: "👁️", name: "Ancient Eye", y: 0.6, x: 0.7, size: 2 },
+      { emoji: "🩸", name: "Living Root", y: 0.8, x: 0.2, size: 1.8 },
+    ],
+    challenges: [
+      { id:"l4c1", type:"word-scramble", title:"What It's Called",
+        description:"Every inscription you've read, every carving, every frequency — they were all spelling something. You have the pieces now. Put the name together. Some part of you doesn't want to.",
+        difficulty:4, params:{words:[{scrambled:"BMOSUI",answer:"MOBIUS",hint:"An infinite loop with one surface"},{scrambled:"CHONRA",answer:"ANCHOR",hint:"What holds the world in place"},{scrambled:"REDOVU",answer:"DEVOUR",hint:"To consume completely"},{scrambled:"NREATEL",answer:"ETERNAL",hint:"Without beginning or end"}]} },
+      { id:"l4c2", type:"code-breaker", title:"Seal of the Deep",
+        description:"One last lock. Biological — it's part of the thing itself. Colors repeat. Crack it and you're through. There's no going back after this one.",
+        difficulty:4, params:{codeLength:4, maxAttempts:7, colors:["R","B","G","Y","P"], allowRepeats:true} },
+      { id:"l4c3", type:"reaction-game", title:"The Final Gauntlet",
+        description:"It's reaching for you. Not to hurt you — that's the strange part. Each point of contact is almost gentle. Don't let it hold on. Not yet. Not until you decide.",
+        difficulty:4, params:{targetCount:18, spawnInterval:1400, lifetime:1900} }
+    ]
+  }
+];
+
+const CREATURE_ICONS = {
+  "Clownfish":"🐠","Sea Turtle":"🐢","Blue Tang":"🐟","Manta Ray":"🐬",
+  "Seahorse":"🌊","Starfish":"⭐","Viperfish":"💀","Hatchetfish":"🔦",
+  "Dragonfish":"🐉","Lanternfish":"💡","Cookiecutter Shark":"🦷","Bristlemouth":"🫧",
+  "Firefly Squid":"🦑","Comb Jelly":"🪼","Hull Plate":"🛡️","Nen Filter":"💨",
+  "Nav Core":"🧭","Sonar Array":"📡","Power Cell":"🔋","Thruster":"🚀",
+  "Comm Relay":"📻","Pressure Seal":"🔒","Moon Jelly":"🌙","Lion's Mane":"🦁",
+  "Box Jelly":"📦","Crystal Jelly":"💎","Atolla":"🔴","Deepstaria":"👻",
+  "Bloody-belly":"❤️","Helmet Jelly":"⛑️","Phantom Jelly":"👁️","Crossota":"✨",
+  "Giant Squid":"🦑","Moon Jellyfish":"🪼","Oarfish":"🐍","Lanternfish":"💡",
+  "Viperfish":"💀","Gulper Eel":"🐍","Bristlemouth":"🫧"
+};
+
+const COLOR_MAP = {
+  R: { bg:"#ef4444", label:"Red" },
+  B: { bg:"#3b82f6", label:"Blue" },
+  G: { bg:"#22c55e", label:"Green" },
+  Y: { bg:"#eab308", label:"Yellow" },
+  P: { bg:"#a855f7", label:"Purple" },
+  C: { bg:"#06b6d4", label:"Cyan" }
+};
+
+const SIMON_PADS = [
+  { base:"#06b6d4", active:"#22d3ee", label:"Nen A", icon:"⬡" },
+  { base:"#3b82f6", active:"#60a5fa", label:"Nen B", icon:"⬡" },
+  { base:"#8b5cf6", active:"#a78bfa", label:"Nen C", icon:"⬡" },
+  { base:"#ef4444", active:"#f87171", label:"Nen D", icon:"⬡" }
+];
+
+const REVELATION_STAGES = [
+  { text:"4,000 meters.", delay:0 },
+  { text:"The bottom.", delay:1800 },
+  { text:"The roots end here.", delay:3500 },
+  { text:"Or — they start here.", delay:5500 },
+  { text:"They're not roots. They were never roots. They're fingers. Arms. The parts of something so large that what you've been descending past for the last four thousand meters was just the outside of it.", delay:8000 },
+  { text:"Your island isn't anchored to anything.", delay:12000 },
+  { text:"Your island is the anchor.", delay:14500 },
+  { text:"Every person who ever lived up there — every house, every grave, every ordinary Tuesday morning — all of it sitting on top of something that's been asleep for ten million years. And you came down here with your Nen and your good intentions and you fixed it. You stitched the wounds shut. You woke it up.", delay:17000 },
+  { text:"It's awake now.", delay:22000 },
+  { text:"What happens next is up to you.", delay:25000 }
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let state = {
+  screen: "start",
+  currentLevel: 0,
+  currentChallenge: 0,
+  completedLevels: [],
+  failedAttempts: 0,
+  startTime: null,
+  challengeKey: 0,
+  nenLevel: 100,
+  treasureClicks: 0
+};
+
+// ============================================================
+// RENDER ENGINE
+// ============================================================
+const _cleanups = [];
+function registerCleanup(fn) { _cleanups.push(fn); }
+function runCleanups() { while(_cleanups.length) { try { _cleanups.pop()(); } catch(e){} } }
+
+function setState(newState) {
+  state = { ...state, ...newState };
+  render();
+}
+
+function render() {
+  const app = document.getElementById('app');
+  runCleanups();
+  app.innerHTML = '';
+
+  let el2;
+  switch(state.screen) {
+    case 'start':       el2 = renderStart(); break;
+    case 'level-intro': el2 = renderLevelIntro(); break;
+    case 'challenge':   el2 = renderChallenge(); break;
+    case 'descent':     el2 = renderDescent(); break;
+    case 'game-over':   el2 = renderGameOver(); break;
+    case 'revelation':  el2 = renderRevelation(); break;
+    case 'treasure':    el2 = renderTreasure(); break;
+    default:            el2 = renderStart();
+  }
+  app.appendChild(el2);
+}
+
+// ============================================================
+// UTILITY
+// ============================================================
+function el(tag, attrs, ...children) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === 'style' && typeof v === 'object') {
+      Object.assign(e.style, v);
+    } else if (k.startsWith('on') && k.length > 2 && k[2] === k[2].toUpperCase()) {
+      e.addEventListener(k.slice(2).toLowerCase(), v);
+    } else if (k === 'className') {
+      e.className = v;
+    } else {
+      e.setAttribute(k, v);
+    }
+  }
+  for (const c of children) {
+    if (c == null) continue;
+    if (typeof c === 'string' || typeof c === 'number') {
+      e.appendChild(document.createTextNode(String(c)));
+    } else if (c instanceof Node) {
+      e.appendChild(c);
+    }
+  }
+  return e;
+}
+
+function makeParticles(count, glowColor) {
+  const wrap = el('div', { className:'particles' });
+  for (let i = 0; i < count; i++) {
+    const size = 1 + Math.random() * 3;
+    const p = el('div', { className:'particle', style: {
+      width: size + 'px', height: size + 'px',
+      left: Math.random() * 100 + '%',
+      top: Math.random() * 100 + '%',
+      backgroundColor: i % 3 === 0 ? glowColor : 'rgba(255,255,255,0.2)',
+      boxShadow: i % 3 === 0 ? `0 0 ${4 + Math.random()*8}px ${glowColor}` : 'none',
+      opacity: 0.2 + Math.random() * 0.5,
+      animation: `float-particle ${3 + Math.random()*4}s ease-in-out infinite`,
+      animationDelay: Math.random() * 3 + 's'
+    }});
+    wrap.appendChild(p);
+  }
+  return wrap;
+}
+
+function getLevel() { return GAME_LEVELS[state.currentLevel] || null; }
+function getChallenge() { const lv = getLevel(); return lv ? lv.challenges[state.currentChallenge] : null; }
+
+// ============================================================
+// START SCREEN
+// ============================================================
+function renderStart() {
+  const screen = el('div', {className:'screen', style:{alignItems:'center', justifyContent:'flex-end', minHeight:'100vh', overflow:'hidden'}});
+
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;z-index:0;';
+  screen.appendChild(canvas);
+
+  function drawStartCanvas() {
+    const W = canvas.width = canvas.offsetWidth || window.innerWidth;
+    const H = canvas.height = canvas.offsetHeight || window.innerHeight;
+    const ctx = canvas.getContext('2d');
+
+    const sky = ctx.createLinearGradient(0, 0, 0, H * 0.56);
+    sky.addColorStop(0, '#4fc3f7');
+    sky.addColorStop(0.25, '#81d4fa');
+    sky.addColorStop(0.55, '#b3e5fc');
+    sky.addColorStop(0.8, '#e1f5fe');
+    sky.addColorStop(1, '#fff9c4');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, W, H * 0.56);
+
+    const horiz = ctx.createRadialGradient(W*0.75, H*0.5, 0, W*0.75, H*0.5, W*0.6);
+    horiz.addColorStop(0, 'rgba(255,236,153,0.22)');
+    horiz.addColorStop(1, 'rgba(255,236,153,0)');
+    ctx.fillStyle = horiz; ctx.fillRect(0,0,W,H*0.56);
+
+    const sunX = W * 0.75, sunY = H * 0.13;
+    const sunHaze = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, 250);
+    sunHaze.addColorStop(0, 'rgba(255,248,180,0.35)');
+    sunHaze.addColorStop(0.4, 'rgba(255,220,80,0.12)');
+    sunHaze.addColorStop(1, 'rgba(255,200,60,0)');
+    ctx.fillStyle = sunHaze; ctx.fillRect(sunX-260, sunY-260, 520, 520);
+    ctx.save(); ctx.globalAlpha = 0.18;
+    ctx.strokeStyle = '#ffe44e'; ctx.lineWidth = 2;
+    for(let r=0;r<12;r++){
+      const ang = (r/12)*Math.PI*2;
+      ctx.beginPath();
+      ctx.moveTo(sunX+Math.cos(ang)*52, sunY+Math.sin(ang)*52);
+      ctx.lineTo(sunX+Math.cos(ang)*110, sunY+Math.sin(ang)*110);
+      ctx.stroke();
+    }
+    ctx.restore();
+    const sunGlow = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, 55);
+    sunGlow.addColorStop(0, '#fffde0');
+    sunGlow.addColorStop(0.4, '#ffe566');
+    sunGlow.addColorStop(1, 'rgba(255,220,80,0)');
+    ctx.fillStyle = sunGlow; ctx.fillRect(sunX-60, sunY-60, 120, 120);
+    ctx.beginPath(); ctx.arc(sunX, sunY, 42, 0, Math.PI*2);
+    ctx.fillStyle = '#fffde0'; ctx.fill();
+
+    function drawCloud(x, y, s) {
+      ctx.save(); ctx.globalAlpha = 0.88;
+      ctx.fillStyle = '#ffffff';
+      [[0,0,s*1.2],[s*0.8,-s*0.4,s*0.9],[s*1.6,-s*0.2,s],[s*2.4,0,s*0.8]].forEach(([dx,dy,r])=>{
+        ctx.beginPath(); ctx.arc(x+dx, y+dy, r, 0, Math.PI*2); ctx.fill();
+      });
+      ctx.restore();
+    }
+    drawCloud(W*0.05, H*0.08, 28);
+    drawCloud(W*0.28, H*0.05, 22);
+    drawCloud(W*0.5, H*0.1, 20);
+    drawCloud(W*0.88, H*0.2, 24);
+
+    const ocean = ctx.createLinearGradient(0, H*0.5, 0, H);
+    ocean.addColorStop(0, '#0d6ea8');
+    ocean.addColorStop(0.15, '#0a4d7e');
+    ocean.addColorStop(0.35, '#072e52');
+    ocean.addColorStop(0.6, '#041829');
+    ocean.addColorStop(1, '#020c14');
+    ctx.fillStyle = ocean;
+    ctx.fillRect(0, H * 0.5, W, H * 0.5);
+
+    ctx.save(); ctx.globalAlpha = 0.18;
+    for (let i = 0; i < 10; i++) {
+      const wy = H * 0.51 + i * H * 0.018;
+      const t = Date.now() / 1800 + i * 0.4;
+      ctx.beginPath(); ctx.moveTo(0, wy);
+      for (let x = 0; x <= W; x += 15) {
+        ctx.lineTo(x, wy + Math.sin(x/50 + t) * 3.5);
+      }
+      ctx.strokeStyle = i < 3 ? '#93c5fd' : '#7dd3fc'; ctx.lineWidth = 1.5; ctx.stroke();
+    }
+    ctx.restore();
+
+    ctx.save(); ctx.globalAlpha = 0.5;
+    for (let s = 0; s < 18; s++) {
+      const sx = (s * W / 18 + (Date.now()/1200)*(s%3===0?1:-1)) % W;
+      const sy = H*0.505 + (s%4)*H*0.008;
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(sx, sy, 1.5, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+
+    const islandX = W / 2;
+    const islandY = H * 0.485;
+    const islandW = Math.min(320, W * 0.5);
+    const islandH = islandW * 0.38;
+
+    const rootDefs = [
+      { tx: -0.38, ex: -0.55, cp1ox: -35, cp1oy: 0.3, cp2ox: 20, glow: 0.7, thick: 9 },
+      { tx: -0.22, ex: -0.3,  cp1ox:  10, cp1oy: 0.38, cp2ox: -15, glow: 0.35, thick: 6 },
+      { tx: -0.06, ex: -0.08, cp1ox: -20, cp1oy: 0.42, cp2ox:  10, glow: 0.5, thick: 8 },
+      { tx:  0.10, ex:  0.12, cp1ox:  25, cp1oy: 0.35, cp2ox: -20, glow: 0.3, thick: 5 },
+      { tx:  0.22, ex:  0.28, cp1ox: -10, cp1oy: 0.4,  cp2ox:  15, glow: 0.65, thick: 10 },
+      { tx:  0.36, ex:  0.5,  cp1ox:  30, cp1oy: 0.32, cp2ox: -10, glow: 0.4, thick: 7 },
+    ];
+    const rootStartY = islandY + islandH * 0.18;
+
+    rootDefs.forEach(rd => {
+      const sx = islandX + islandW * rd.tx;
+      const ex = islandX + islandW * rd.ex;
+      const cp1x = sx + rd.cp1ox;
+      const cp1y = rootStartY + (H - rootStartY) * rd.cp1oy;
+      const cp2x = ex + rd.cp2ox;
+      const cp2y = H - (H - rootStartY) * 0.15;
+
+      ctx.save();
+      ctx.strokeStyle = `rgba(6,182,212,${rd.glow * 0.5})`;
+      ctx.lineWidth = rd.thick + 10;
+      ctx.shadowColor = '#06b6d4'; ctx.shadowBlur = 20;
+      ctx.beginPath(); ctx.moveTo(sx, rootStartY);
+      ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, ex, H + 10);
+      ctx.stroke(); ctx.restore();
+
+      const rg = ctx.createLinearGradient(sx, rootStartY, ex, H);
+      rg.addColorStop(0, '#6d4c41');
+      rg.addColorStop(0.25, '#4e342e');
+      rg.addColorStop(0.6, '#3e2723');
+      rg.addColorStop(1, 'rgba(10,5,2,0.4)');
+      ctx.strokeStyle = rg; ctx.lineWidth = rd.thick; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(sx, rootStartY);
+      ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, ex, H + 10);
+      ctx.stroke();
+
+      ctx.save(); ctx.globalAlpha = 0.4 + rd.glow * 0.35;
+      ctx.strokeStyle = '#22d3ee'; ctx.lineWidth = 1.2; ctx.setLineDash([5, 9]);
+      ctx.beginPath(); ctx.moveTo(sx, rootStartY);
+      ctx.bezierCurveTo(cp1x+2, cp1y+3, cp2x-2, cp2y-3, ex, H + 10);
+      ctx.stroke(); ctx.setLineDash([]); ctx.restore();
+    });
+
+    const cliffGrad = ctx.createLinearGradient(islandX, islandY - islandH*0.1, islandX, islandY + islandH*0.5);
+    cliffGrad.addColorStop(0, '#795548');
+    cliffGrad.addColorStop(0.4, '#6d4c41');
+    cliffGrad.addColorStop(1, '#4e342e');
+    ctx.fillStyle = cliffGrad;
+    ctx.beginPath();
+    ctx.moveTo(islandX - islandW*0.52, islandY - islandH*0.05);
+    ctx.bezierCurveTo(islandX - islandW*0.58, islandY + islandH*0.3, islandX - islandW*0.45, islandY + islandH*0.5, islandX - islandW*0.2, islandY + islandH*0.45);
+    ctx.bezierCurveTo(islandX, islandY + islandH*0.55, islandX + islandW*0.2, islandY + islandH*0.45, islandX + islandW*0.45, islandY + islandH*0.5);
+    ctx.bezierCurveTo(islandX + islandW*0.58, islandY + islandH*0.3, islandX + islandW*0.52, islandY - islandH*0.05, islandX + islandW*0.52, islandY - islandH*0.05);
+    ctx.closePath(); ctx.fill();
+
+    const islandGrad = ctx.createLinearGradient(islandX, islandY - islandH, islandX, islandY + islandH*0.05);
+    islandGrad.addColorStop(0, '#66bb6a');
+    islandGrad.addColorStop(0.25, '#4caf50');
+    islandGrad.addColorStop(0.55, '#388e3c');
+    islandGrad.addColorStop(0.8, '#8d6e63');
+    islandGrad.addColorStop(1, '#795548');
+    ctx.fillStyle = islandGrad;
+    ctx.beginPath();
+    ctx.moveTo(islandX - islandW*0.52, islandY - islandH*0.05);
+    ctx.bezierCurveTo(islandX - islandW*0.58, islandY - islandH*0.2, islandX - islandW*0.38, islandY - islandH, islandX, islandY - islandH);
+    ctx.bezierCurveTo(islandX + islandW*0.38, islandY - islandH, islandX + islandW*0.58, islandY - islandH*0.2, islandX + islandW*0.52, islandY - islandH*0.05);
+    ctx.bezierCurveTo(islandX + islandW*0.55, islandY + islandH*0.1, islandX - islandW*0.55, islandY + islandH*0.1, islandX - islandW*0.52, islandY - islandH*0.05);
+    ctx.closePath(); ctx.fill();
+
+    ctx.save(); ctx.globalAlpha = 0.55;
+    ctx.fillStyle = '#81c784';
+    ctx.beginPath();
+    ctx.ellipse(islandX, islandY - islandH*0.85, islandW*0.42, islandH*0.22, 0, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    function drawTree(tx, ty, sz) {
+      ctx.fillStyle = '#5d4037';
+      ctx.fillRect(tx - sz*0.12, ty, sz*0.24, sz*0.65);
+      ctx.fillStyle = '#1b5e20';
+      ctx.beginPath(); ctx.arc(tx, ty - sz*0.05, sz*0.55, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#2e7d32';
+      ctx.beginPath(); ctx.arc(tx - sz*0.2, ty + sz*0.05, sz*0.4, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(tx + sz*0.22, ty + sz*0.08, sz*0.38, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#43a047';
+      ctx.beginPath(); ctx.arc(tx, ty - sz*0.15, sz*0.32, 0, Math.PI*2); ctx.fill();
+    }
+    drawTree(islandX - islandW*0.22, islandY - islandH*1.02, 24);
+    drawTree(islandX + islandW*0.12, islandY - islandH*1.1, 28);
+    drawTree(islandX - islandW*0.04, islandY - islandH*0.9, 20);
+    drawTree(islandX + islandW*0.3, islandY - islandH*0.88, 17);
+
+    ctx.save(); ctx.globalAlpha = 0.8;
+    [[islandX-islandW*0.1, islandY-islandH*0.78,'#ffcc02'],
+     [islandX+islandW*0.22, islandY-islandH*0.72,'#ff5252'],
+     [islandX-islandW*0.3, islandY-islandH*0.68,'#ff80ab']].forEach(([fx,fy,fc])=>{
+      ctx.fillStyle = fc;
+      ctx.beginPath(); ctx.arc(fx, fy, 3.5, 0, Math.PI*2); ctx.fill();
+    });
+    ctx.restore();
+
+    ctx.save(); ctx.globalAlpha = 0.22;
+    const foamGrad = ctx.createRadialGradient(islandX, islandY+2, 0, islandX, islandY+2, islandW*0.62);
+    foamGrad.addColorStop(0.7, '#b3e5fc'); foamGrad.addColorStop(1, 'rgba(179,229,252,0)');
+    ctx.fillStyle = foamGrad;
+    ctx.beginPath(); ctx.ellipse(islandX, islandY+2, islandW*0.6, islandH*0.2, 0, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.font = `13px 'Share Tech Mono', monospace`;
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.fillText('▼ 4,000m of unknown depth below', W/2 - 130, H * 0.98);
+    ctx.restore();
+  }
+
+  setTimeout(() => {
+    drawStartCanvas();
+    window.addEventListener('resize', drawStartCanvas);
+    registerCleanup(() => window.removeEventListener('resize', drawStartCanvas));
+  }, 10);
+
+  const content = el('div', {className:'content', style:{
+    width:'100%', display:'flex', flexDirection:'column', alignItems:'center',
+    justifyContent:'flex-start', padding:'4vh 1.5rem 6vh',
+    gap:'0', zIndex:'10', pointerEvents:'none', minHeight:'100vh'
+  }});
+
+  const badge = el('div', {style:{
+    marginTop:'3vh',
+    fontFamily:'var(--font-mono)', fontSize:'0.7rem',
+    letterSpacing:'0.35em', textTransform:'uppercase',
+    color:'rgba(14,165,233,0.85)',
+    padding:'0.4rem 1rem',
+    border:'1px solid rgba(14,165,233,0.3)',
+    borderRadius:'99px',
+    backgroundColor:'rgba(14,165,233,0.08)',
+    backdropFilter:'blur(4px)',
+    pointerEvents:'auto'
+  }}, '⚓  A Deep Descent Adventure');
+
+  const titleWrap = el('div', {style:{
+    textAlign:'center', marginTop:'2vh',
+    pointerEvents:'auto'
+  }});
+  const title = el('h1', {style:{
+    fontFamily:'var(--font-display)',
+    fontSize:'clamp(2.8rem,8vw,6rem)',
+    fontWeight:'900',
+    lineHeight:'1.05',
+    letterSpacing:'0.03em',
+    color:'#fff',
+    textShadow:'0 2px 20px rgba(0,0,0,0.6), 0 0 60px rgba(6,182,212,0.2)'
+  }});
+  title.innerHTML = 'Anchor of<br><span style="background:linear-gradient(135deg,#22d3ee,#3b82f6,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Möbius</span>';
+  const tagline = el('p', {style:{
+    fontFamily:'var(--font-body)',
+    fontStyle:'italic',
+    fontSize:'clamp(1rem,2.5vw,1.3rem)',
+    color:'rgba(255,255,255,0.55)',
+    marginTop:'0.5rem',
+    letterSpacing:'0.05em'
+  }}, '"Something lives at the bottom. You\'re going to find out what."');
+  titleWrap.append(title, tagline);
+
+  const spacer = el('div', {style:{flex:'1', minHeight:'30vh'}});
+
+  const infoCard = el('div', {style:{
+    maxWidth:'480px', width:'100%',
+    background:'rgba(2,15,30,0.82)',
+    backdropFilter:'blur(20px)',
+    border:'1px solid rgba(255,255,255,0.08)',
+    borderRadius:'1.5rem',
+    padding:'1.75rem 2rem',
+    display:'flex', flexDirection:'column', gap:'1.25rem',
+    pointerEvents:'auto',
+    animation:'fade-in-up 1.2s 0.3s both',
+    boxShadow:'0 20px 60px rgba(0,0,0,0.6)'
+  }});
+
+  const desc = el('p', {style:{
+    fontFamily:'var(--font-body)',
+    fontSize:'1.05rem',
+    lineHeight:'1.7',
+    color:'rgba(255,255,255,0.75)',
+    borderLeft:'2px solid rgba(6,182,212,0.5)',
+    paddingLeft:'1rem'
+  }}, 'Your island floats on nothing. Always has. The roots go down four thousand meters and nobody ever asked why. You\'re asking now — because whatever\'s been chewing through them started six weeks ago and the island is sinking. Bathysphere runs on Nen. You have one shot at this.');
+
+  const statsRow = el('div', {style:{display:'flex',gap:'1.5rem',justifyContent:'center'}});
+  [['4','Levels'],['12','Challenges'],['4','Calamity Types'],['2','Endings']].forEach(([num,lbl]) => {
+    const s = el('div', {style:{display:'flex',flexDirection:'column',alignItems:'center',gap:'2px'}});
+    s.appendChild(el('span', {style:{fontFamily:'var(--font-mono)',fontSize:'1.4rem',fontWeight:'700',color:'#22d3ee'}}, num));
+    s.appendChild(el('span', {style:{fontSize:'0.75rem',color:'rgba(255,255,255,0.4)',letterSpacing:'0.08em'}}, lbl));
+    statsRow.appendChild(s);
+  });
+
+  const startBtn = el('button', {
+    className:'btn-primary',
+    style:{
+      alignSelf:'center',
+      borderColor:'rgba(6,182,212,0.5)',
+      backgroundColor:'rgba(6,182,212,0.15)',
+      fontFamily:'var(--font-display)',
+      fontSize:'1rem',
+      letterSpacing:'0.15em',
+      textTransform:'uppercase',
+      animation:'nen-glow 2s ease-in-out infinite'
+    },
+    onClick() {
+      setState({ screen:'level-intro', currentLevel:0, currentChallenge:0, startTime:Date.now(), nenLevel:100 });
+    }
+  }, '⬇ Begin Descent');
+  startBtn.appendChild(el('div', {className:'shimmer'}));
+  startBtn.addEventListener('mouseenter', () => { startBtn.style.backgroundColor = 'rgba(6,182,212,0.3)'; });
+  startBtn.addEventListener('mouseleave', () => { startBtn.style.backgroundColor = 'rgba(6,182,212,0.15)'; });
+
+  infoCard.append(desc, statsRow, startBtn);
+  content.append(badge, titleWrap, spacer, infoCard);
+  screen.appendChild(content);
+
+  return screen;
+}
+
+// ============================================================
+// LEVEL INTRO
+// ============================================================
+function renderLevelIntro() {
+  const level = getLevel();
+  if (!level) { setState({screen:'start'}); return renderStart(); }
+
+  const screen = el('div', {className:'screen', style:{alignItems:'center', justifyContent:'center', overflow:'hidden'}});
+
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;z-index:0;';
+  screen.appendChild(canvas);
+
+  function drawDeepScene() {
+    const W = canvas.width = canvas.offsetWidth || window.innerWidth;
+    const H = canvas.height = canvas.offsetHeight || window.innerHeight;
+    const ctx = canvas.getContext('2d');
+    const [bg1, bg2] = level.bgGradient;
+
+    const bgGrad = ctx.createLinearGradient(0,0,0,H);
+    bgGrad.addColorStop(0, bg1);
+    bgGrad.addColorStop(1, bg2);
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0,0,W,H);
+
+    for (let i = 0; i < 3; i++) {
+      const hGrad = ctx.createRadialGradient(W/2, H*(0.3+i*0.3), 0, W/2, H*(0.3+i*0.3), W*0.6);
+      hGrad.addColorStop(0, `rgba(0,0,0,0)`);
+      hGrad.addColorStop(1, `rgba(0,0,0,${0.15 + level.waterOpacity * 0.2})`);
+      ctx.fillStyle = hGrad;
+      ctx.fillRect(0,0,W,H);
+    }
+
+    function hexRGB(h) {
+      if (!h || h[0] !== '#') return [0,0,0];
+      const hex = h.length === 4 ? h[1]+h[1]+h[2]+h[2]+h[3]+h[3] : h.slice(1);
+      return [parseInt(hex.slice(0,2),16)||0, parseInt(hex.slice(2,4),16)||0, parseInt(hex.slice(4,6),16)||0];
+    }
+    const [gr,gg,gb] = hexRGB(level.glowColor);
+
+    for (let i = 0; i < 40 + level.id * 8; i++) {
+      const px = Math.random() * W;
+      const py = Math.random() * H;
+      const pr = 0.5 + Math.random() * 2;
+      const pa = 0.1 + Math.random() * 0.5;
+      ctx.beginPath(); ctx.arc(px, py, pr, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(${gr},${gg},${gb},${pa})`;
+      ctx.fill();
+      if (Math.random() > 0.6) {
+        const glow = ctx.createRadialGradient(px,py,0,px,py,pr*4);
+        glow.addColorStop(0, `rgba(${gr},${gg},${gb},${pa*0.6})`);
+        glow.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath(); ctx.arc(px,py,pr*4,0,Math.PI*2); ctx.fill();
+      }
+    }
+
+    ctx.save(); ctx.globalAlpha = 0.12 + level.id * 0.04;
+    for (let s = 0; s < 3; s++) {
+      const sx = s === 0 ? W*0.08 : s === 1 ? W*0.92 : W*0.5;
+      ctx.strokeStyle = level.glowColor;
+      ctx.lineWidth = 2 + level.id;
+      ctx.beginPath();
+      ctx.moveTo(sx, 0);
+      for (let y = 0; y < H; y += 30) {
+        ctx.lineTo(sx + Math.sin(y/60 + s) * (15 + level.id*3), y);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    ctx.save();
+    ctx.font = `${18 + level.id * 2}px serif`;
+    level.creatures.forEach((c, i) => {
+      const cx2 = c.x * W;
+      const cy2 = c.y * H;
+      const alpha = 0.3 + (i%3)*0.2;
+      ctx.globalAlpha = alpha;
+      ctx.fillText(c.emoji, cx2, cy2);
+    });
+    ctx.restore();
+  }
+
+  setTimeout(() => {
+    drawDeepScene();
+    window.addEventListener('resize', drawDeepScene);
+    registerCleanup(() => window.removeEventListener('resize', drawDeepScene));
+  }, 10);
+
+  screen.appendChild(el('div', {className:'overlay', style:{background:`rgba(0,0,0,${0.35 + level.id*0.05})`, zIndex:1}}));
+  screen.appendChild(el('div', {className:'overlay', style:{
+    background:'radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.5) 100%)',
+    zIndex:2
+  }}));
+
+  const content = el('div', {className:'content', style:{
+    display:'flex', flexDirection:'column', alignItems:'center', gap:'1.5rem',
+    padding:'2rem', textAlign:'center', maxWidth:'540px',
+    animation:'fade-in-up 0.8s ease forwards', zIndex:10
+  }});
+
+  const badge = el('div', {style:{
+    display:'inline-flex', alignItems:'center', gap:'8px',
+    borderRadius:'99px', border:`1px solid ${level.glowColor}50`,
+    backgroundColor:`${level.glowColor}12`,
+    color:level.glowColor, padding:'0.4rem 1.25rem',
+    fontSize:'0.8rem', fontFamily:'var(--font-mono)'
+  }}, `▼ ${level.depthStart.toLocaleString()}m – ${level.depthEnd.toLocaleString()}m`);
+
+  const levelLabel = el('p', {style:{
+    fontSize:'0.65rem', letterSpacing:'0.3em', textTransform:'uppercase',
+    color:level.glowColor, fontWeight:'700', fontFamily:'var(--font-mono)'
+  }}, `ZONE ${level.id} OF 4`);
+
+  const levelName = el('h2', {style:{
+    fontFamily:'var(--font-display)',
+    fontSize:'clamp(2rem,6vw,3.2rem)',
+    fontWeight:'900', color:'#fff', lineHeight:'1.1',
+    textShadow:`0 0 40px ${level.glowColor}50, 0 2px 20px rgba(0,0,0,0.8)`
+  }}, level.name);
+
+  const levelSub = el('p', {style:{
+    fontFamily:'var(--font-body)', fontStyle:'italic',
+    fontSize:'1.05rem', color:'rgba(255,255,255,0.5)'
+  }}, level.subtitle);
+
+  const desc = el('p', {style:{
+    fontFamily:'var(--font-body)', fontSize:'1rem', lineHeight:'1.75',
+    color:'rgba(255,255,255,0.78)', maxWidth:'460px',
+    textShadow:'0 1px 8px rgba(0,0,0,0.9)'
+  }}, level.description);
+
+  const calamityBox = el('div', {style:{
+    background:`rgba(0,0,0,0.5)`, border:`1px solid ${level.glowColor}30`,
+    borderRadius:'0.75rem', padding:'0.75rem 1.25rem',
+    display:'flex', gap:'8px', alignItems:'flex-start', backdropFilter:'blur(8px)'
+  }});
+  calamityBox.appendChild(el('span', {style:{color:level.glowColor,fontSize:'1rem'}}, '⚠'));
+  const calamityText = el('div', {});
+  calamityText.appendChild(el('p', {style:{fontSize:'0.7rem',letterSpacing:'0.15em',textTransform:'uppercase',color:level.glowColor,fontFamily:'var(--font-mono)'}}, `Calamity: ${level.calamityName}`));
+  calamityText.appendChild(el('p', {style:{fontSize:'0.875rem',color:'rgba(255,255,255,0.6)',marginTop:'2px'}}, level.calamityDesc));
+  calamityBox.appendChild(calamityText);
+
+  const challengeInfo = el('div', {style:{display:'flex',gap:'1.5rem',fontSize:'0.875rem',color:'rgba(255,255,255,0.45)',fontFamily:'var(--font-mono)'}});
+  challengeInfo.innerHTML = `<span><strong style="color:${level.glowColor}">${level.challenges.length}</strong> challenges</span><span style="color:rgba(255,255,255,0.2)">|</span><span><strong style="color:#f59e0b">4:00</strong> per challenge</span>`;
+
+  const btn = el('button', {
+    className:'btn-primary',
+    style:{
+      borderColor:`${level.glowColor}60`, backgroundColor:`${level.glowColor}18`,
+      fontFamily:'var(--font-display)', letterSpacing:'0.1em'
+    },
+    onClick() { setState({screen:'challenge'}); }
+  }, 'Engage Calamity');
+  btn.appendChild(el('div', {className:'shimmer'}));
+  btn.addEventListener('mouseenter', () => { btn.style.backgroundColor=`${level.glowColor}35`; btn.style.boxShadow=`0 0 40px ${level.glowColor}35`; });
+  btn.addEventListener('mouseleave', () => { btn.style.backgroundColor=`${level.glowColor}18`; btn.style.boxShadow=''; });
+
+  content.append(badge, levelLabel, levelName, levelSub, desc, calamityBox, challengeInfo, btn);
+  screen.appendChild(content);
+  return screen;
+}
+
+// ============================================================
+// CHALLENGE SCREEN
+// ============================================================
+function renderChallenge() {
+  const level = getLevel();
+  const challenge = getChallenge();
+  if (!level || !challenge) return renderStart();
+
+  const screen = el('div', {className:'screen', style:{background:level.bgColor}});
+
+  screen.appendChild(el('div', {className:'overlay', style:{
+    background:`radial-gradient(ellipse at 50% 120%, ${level.glowColor}08 0%, rgba(0,0,0,0.85) 60%)`
+  }}));
+
+  const hud = el('div', {className:'hud'});
+
+  const hudLeft = el('div', {style:{display:'flex',flexDirection:'column',gap:'2px'}});
+  hudLeft.appendChild(el('span', {className:'hud-label'}, `${level.name}`));
+  hudLeft.appendChild(el('span', {className:'hud-value', style:{color:level.glowColor}}, `▼ ${level.depthStart.toLocaleString()}–${level.depthEnd.toLocaleString()}m`));
+
+  const timerEl = makeTimer(level.glowColor, () => {
+    setState({ screen:'game-over', failedAttempts: state.failedAttempts + 1 });
+  });
+
+  const nenGauge = el('div', {className:'nen-gauge'});
+  nenGauge.appendChild(el('span', {style:{fontSize:'0.6rem',letterSpacing:'0.15em',color:'rgba(6,182,212,0.5)',fontFamily:'var(--font-mono)'}},'NEN'));
+  const nenBg = el('div', {className:'nen-bar-bg'});
+  const nenBar = el('div', {className:'nen-bar', style:{width: state.nenLevel + '%'}});
+  nenBg.appendChild(nenBar);
+  const nenPct = el('span', {style:{fontFamily:'var(--font-mono)',fontSize:'0.8rem',color:'rgba(6,182,212,0.8)',minWidth:'3ch'}}, state.nenLevel + '%');
+  nenGauge.append(nenBg, nenPct);
+
+  const dotsWrap = el('div', {className:'dots'});
+  level.challenges.forEach((_, i) => {
+    const d = el('div', {className:'dot', style:{
+      borderColor: i <= state.currentChallenge ? level.glowColor : 'rgba(255,255,255,0.15)',
+      backgroundColor: i < state.currentChallenge ? level.glowColor : i === state.currentChallenge ? `${level.glowColor}45` : 'transparent',
+      boxShadow: i < state.currentChallenge ? `0 0 6px ${level.glowColor}` : 'none'
+    }});
+    dotsWrap.appendChild(d);
+  });
+
+  hud.append(hudLeft, timerEl, nenGauge, dotsWrap);
+  screen.appendChild(hud);
+
+  const main = el('div', {className:'content', style:{
+    flex:'1', display:'flex', flexDirection:'column', alignItems:'center',
+    justifyContent:'center', padding:'1.5rem 1rem', gap:'1.25rem'
+  }});
+
+  const header = el('div', {style:{textAlign:'center',display:'flex',flexDirection:'column',gap:'0.4rem'}});
+  header.appendChild(el('span', {style:{
+    fontSize:'0.65rem', fontWeight:'700', letterSpacing:'0.25em', textTransform:'uppercase',
+    color:level.glowColor, fontFamily:'var(--font-mono)'
+  }}, `Challenge ${state.currentChallenge + 1} of ${level.challenges.length} — ${level.calamityName.toUpperCase()}`));
+  header.appendChild(el('h3', {style:{
+    fontFamily:'var(--font-display)', fontSize:'clamp(1.3rem,4vw,1.9rem)',
+    fontWeight:'700', color:'#fff', letterSpacing:'0.03em'
+  }}, challenge.title));
+  header.appendChild(el('p', {style:{
+    fontFamily:'var(--font-body)', fontSize:'0.95rem', lineHeight:'1.6',
+    color:'rgba(255,255,255,0.6)', maxWidth:'420px', margin:'0 auto'
+  }}, challenge.description));
+  main.appendChild(header);
+
+  const box = el('div', {className:'challenge-card', style:{borderColor:`${level.glowColor}18`}});
+
+  const onComplete = () => {
+    const newNen = Math.max(10, state.nenLevel - Math.floor(Math.random() * 8 + 5));
+    showSuccessOverlay(level, challenge, () => {
+      const nextChallenge = state.currentChallenge + 1;
+      if (nextChallenge >= GAME_LEVELS[state.currentLevel].challenges.length) {
+        const nextLevel = state.currentLevel + 1;
+        if (nextLevel >= GAME_LEVELS.length) {
+          setState({ screen:'treasure', nenLevel: newNen, completedLevels:[...state.completedLevels, state.currentLevel], treasureClicks:0 });
+        } else {
+          setState({ screen:'descent', completedLevels:[...state.completedLevels, state.currentLevel], currentChallenge:0, nenLevel: newNen });
+        }
+      } else {
+        setState({ currentChallenge:nextChallenge, screen:'challenge', challengeKey: state.challengeKey+1, nenLevel: newNen });
+      }
+    });
+  };
+
+  buildChallengeContent(box, challenge, level.glowColor, onComplete);
+  main.appendChild(box);
+  screen.appendChild(main);
+  return screen;
+}
+
+function showSuccessOverlay(level, challenge, callback) {
+  const overlay = el('div', {className:'success-overlay'});
+  const box = el('div', {className:'success-box', style:{borderColor:`${level.glowColor}50`, boxShadow:`0 0 80px ${level.glowColor}20`}});
+  const icon = el('div', {style:{fontSize:'2rem', animation:'fade-in-up 0.3s ease'}}, '✦');
+  const txt = el('div', {style:{fontFamily:'var(--font-display)', fontSize:'2rem', fontWeight:'900', color:level.glowColor, letterSpacing:'0.05em'}}, 'Resolved');
+  const sub = el('p', {style:{color:'rgba(255,255,255,0.4)',fontSize:'0.875rem',fontFamily:'var(--font-mono)'}},
+    state.currentChallenge + 1 < GAME_LEVELS[state.currentLevel].challenges.length ? 'Calamity suppressed. Continuing descent...' : 'Zone cleared. Descending deeper...');
+  box.append(icon, txt, sub);
+  overlay.appendChild(box);
+  document.getElementById('app').appendChild(overlay);
+  setTimeout(() => { overlay.remove(); callback(); }, 1400);
+}
+
+function buildChallengeContent(container, challenge, glowColor, onComplete) {
+  switch(challenge.type) {
+    case 'memory-match': buildMemoryMatch(container, challenge.params, glowColor, onComplete); break;
+    case 'simon-pattern': buildSimon(container, challenge.params, glowColor, onComplete); break;
+    case 'reaction-game': buildReaction(container, challenge.params, glowColor, onComplete); break;
+    case 'word-scramble': buildWordScramble(container, challenge.params, glowColor, onComplete); break;
+    case 'code-breaker': buildCodeBreaker(container, challenge.params, glowColor, onComplete); break;
+  }
+}
+
+// ============================================================
+// TIMER
+// ============================================================
+function makeTimer(glowColor, onTimeUp) {
+  const wrap = el('div', {className:'timer-wrap'});
+  const barBg = el('div', {className:'timer-bar-bg'});
+  const bar = el('div', {className:'timer-bar', style:{width:'100%', backgroundColor:glowColor}});
+  barBg.appendChild(bar);
+  const text = el('span', {className:'timer-text', style:{color:'#fff'}}, '4:00');
+  wrap.append(barBg, text);
+
+  let timeLeft = TIMER_SECONDS;
+  let done = false;
+
+  const interval = setInterval(() => {
+    timeLeft--;
+    if (timeLeft <= 0 && !done) {
+      done = true; clearInterval(interval); onTimeUp(); return;
+    }
+    const m = Math.floor(timeLeft / 60), s = timeLeft % 60;
+    text.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+    const pct = timeLeft / TIMER_SECONDS;
+    bar.style.width = (pct * 100) + '%';
+    const isCrit = timeLeft <= 10, isLow = timeLeft <= 30;
+    const c = isCrit ? '#ef4444' : isLow ? '#f59e0b' : glowColor;
+    bar.style.backgroundColor = c;
+    bar.style.boxShadow = `0 0 8px ${c}`;
+    text.style.color = isCrit ? '#ef4444' : isLow ? '#f59e0b' : '#fff';
+    text.style.animation = isCrit ? 'blink 0.5s ease-in-out infinite' : '';
+  }, 1000);
+
+  registerCleanup(() => { clearInterval(interval); done = true; });
+  return wrap;
+}
+
+// ============================================================
+// MEMORY MATCH
+// ============================================================
+function buildMemoryMatch(container, params, glowColor, onComplete) {
+  const { pairs, creatures } = params;
+  const picked = creatures.slice(0, pairs);
+  let deck = [...picked, ...picked].map((label, i) => ({ id:i, label, flipped:false, matched:false }));
+  for (let i = deck.length-1; i>0; i--) { const j=Math.floor(Math.random()*(i+1)); [deck[i],deck[j]]=[deck[j],deck[i]]; }
+
+  let selected=[], matchedCount=0, moves=0, canClick=true, completed=false, memActive=true;
+  registerCleanup(() => { memActive = false; completed = true; });
+
+  const stats = el('div', {style:{display:'flex',gap:'2rem',fontSize:'0.875rem',color:'rgba(255,255,255,0.55)',marginBottom:'1rem',fontFamily:'var(--font-mono)'}});
+  const matchedText = el('span', {}); matchedText.innerHTML = `MATCHED <strong style="color:${glowColor}">0</strong>/${pairs}`;
+  const movesText = el('span', {}); movesText.innerHTML = `MOVES <strong style="color:#fff">0</strong>`;
+  stats.append(matchedText, movesText);
+
+  const cols = pairs <= 6 ? 4 : pairs <= 8 ? 4 : 5;
+  const CARD_SIZE = pairs <= 8 ? 68 : 62;
+  const grid = el('div', {className:'memory-grid', style:{gridTemplateColumns:`repeat(${cols},${CARD_SIZE}px)`}});
+
+  const cardEls = deck.map((card) => {
+    const cardEl = el('div', {className:'memory-card', style:{width:CARD_SIZE+'px',height:CARD_SIZE+'px'}});
+    const inner = el('div', {className:'memory-card-inner'});
+
+    const back = el('div', {className:'memory-card-face memory-card-back', style:{
+      borderColor:`${glowColor}25`, color:glowColor, fontSize:'1.3rem',
+      background:'rgba(0,0,0,0.7)'
+    }}, '✦');
+
+    const front = el('div', {className:'memory-card-face memory-card-front', style:{
+      borderColor:`${glowColor}50`, backgroundColor:`${glowColor}12`
+    }});
+    front.appendChild(el('span', {style:{fontSize:'1.1rem'}}, CREATURE_ICONS[card.label] || '?'));
+    front.appendChild(el('span', {style:{fontSize:'0.55rem',color:'rgba(255,255,255,0.8)',lineHeight:'1.2',textAlign:'center',padding:'0 3px',marginTop:'2px'}}, card.label));
+
+    inner.append(back, front);
+    cardEl.appendChild(inner);
+
+    cardEl.addEventListener('click', () => {
+      if (!canClick || selected.includes(card.id) || card.matched || card.flipped) return;
+      card.flipped = true; inner.classList.add('flipped'); selected.push(card.id);
+
+      if (selected.length === 2) {
+        canClick = false; moves++;
+        movesText.innerHTML = `MOVES <strong style="color:#fff">${moves}</strong>`;
+        const [id1,id2] = selected;
+        const c1=deck.find(c=>c.id===id1), c2=deck.find(c=>c.id===id2);
+        if (c1.label===c2.label) {
+          setTimeout(() => {
+            if(!memActive) return;
+            c1.matched=true; c2.matched=true;
+            [c1,c2].forEach(cd=>{
+              const f=cardEls[deck.indexOf(cd)].querySelector('.memory-card-front');
+              if(f){f.style.borderColor='#22c55e';f.style.backgroundColor='rgba(34,197,94,0.15)';f.style.boxShadow='0 0 20px rgba(34,197,94,0.3)';}
+            });
+            matchedCount++;
+            matchedText.innerHTML = `MATCHED <strong style="color:${glowColor}">${matchedCount}</strong>/${pairs}`;
+            selected=[]; canClick=true;
+            if(matchedCount>=pairs&&!completed){completed=true;setTimeout(onComplete,600);}
+          },350);
+        } else {
+          setTimeout(()=>{
+            if(!memActive) return;
+            c1.flipped=false;c2.flipped=false;
+            [c1,c2].forEach(cd=>{const inn=cardEls[deck.indexOf(cd)].querySelector('.memory-card-inner');if(inn)inn.classList.remove('flipped');});
+            selected=[]; canClick=true;
+          },900);
+        }
+      }
+    });
+    return cardEl;
+  });
+
+  cardEls.forEach(c=>grid.appendChild(c));
+  container.append(stats, grid);
+}
+
+// ============================================================
+// SIMON PATTERN
+// ============================================================
+function buildSimon(container, params, glowColor, onComplete) {
+  const { startLength, maxLength } = params;
+  let sequence=[], playerInput=[], phase='showing', round=1;
+  const totalRounds = maxLength - startLength + 1;
+  let completed=false;
+
+  const statusEl = el('div', {style:{display:'flex',flexWrap:'wrap',gap:'1rem',fontSize:'0.8rem',color:'rgba(255,255,255,0.5)',marginBottom:'1rem',justifyContent:'center',alignItems:'center',fontFamily:'var(--font-mono)'}});
+  const roundText = el('span', {}); roundText.innerHTML = `ROUND <strong style="color:${glowColor}">1</strong>/${totalRounds}`;
+  const seqText = el('span', {}); seqText.innerHTML = `LENGTH <strong style="color:#fff">${startLength}</strong>`;
+  const phaseText = el('span', {style:{animation:'blink 1s ease-in-out infinite',color:'#f59e0b'}}, 'WATCH...');
+  statusEl.append(roundText, seqText, phaseText);
+
+  const gridEl = el('div', {className:'simon-grid'});
+  const padEls = SIMON_PADS.map((pad, idx) => {
+    const p = el('button', {className:'simon-pad', style:{
+      borderColor:`${pad.base}40`, backgroundColor:`${pad.base}12`, color:`${pad.base}80`,
+      fontFamily:'var(--font-mono)'
+    }});
+    p.innerHTML = `<span style="font-size:1.4rem">${['▲','◀','▶','▼'][idx]}</span><span style="font-size:0.7rem">${pad.label}</span>`;
+    p.addEventListener('click', ()=>handlePadClick(idx));
+    return p;
+  });
+  padEls.forEach(p=>gridEl.appendChild(p));
+
+  const progressDots = el('div', {style:{display:'flex',gap:'5px',justifyContent:'center',marginTop:'0.75rem',flexWrap:'wrap'}});
+
+  function updateDots() {
+    progressDots.innerHTML='';
+    sequence.forEach((_,i)=>{
+      progressDots.appendChild(el('div',{style:{
+        width:'7px',height:'7px',borderRadius:'50%',
+        backgroundColor: i<playerInput.length ? (playerInput[i]===sequence[i]?'#22c55e':'#ef4444') : 'rgba(255,255,255,0.18)',
+        boxShadow: (i<playerInput.length&&playerInput[i]===sequence[i])?'0 0 5px #22c55e':'none',
+        transition:'all 0.2s'
+      }}));
+    });
+  }
+
+  function flashPad(idx, dur) {
+    const pad=SIMON_PADS[idx], p=padEls[idx];
+    p.style.borderColor=pad.active; p.style.backgroundColor=`${pad.active}45`;
+    p.style.boxShadow=`0 0 35px ${pad.active}70, inset 0 0 20px ${pad.active}20`;
+    p.style.transform='scale(1.06)'; p.style.color=pad.active;
+    setTimeout(()=>{ p.style.borderColor=`${pad.base}40`; p.style.backgroundColor=`${pad.base}12`; p.style.boxShadow='none'; p.style.transform='scale(1)'; p.style.color=`${pad.base}80`; }, dur);
+  }
+
+  function setPhase(ph) {
+    phase=ph; phaseText.style.animation='';
+    if(ph==='showing'){phaseText.textContent='WATCH...';phaseText.style.animation='blink 1s ease-in-out infinite';phaseText.style.color='#f59e0b';}
+    else if(ph==='input'){phaseText.textContent='YOUR TURN';phaseText.style.color='#22c55e';}
+    else if(ph==='fail'){phaseText.textContent='WRONG — WATCH AGAIN';phaseText.style.color='#ef4444';}
+    else if(ph==='success'){phaseText.textContent='CORRECT';phaseText.style.color='#22c55e';}
+    padEls.forEach(p=>p.disabled=phase!=='input');
+  }
+
+  let simonActive = true;
+  registerCleanup(() => { simonActive = false; completed = true; });
+
+  function playSequence(seq) {
+    if(!simonActive) return;
+    setPhase('showing'); playerInput=[]; updateDots();
+    seq.forEach((pi,i)=>{ setTimeout(()=>{ if(simonActive) flashPad(pi,420); }, i*650); });
+    setTimeout(()=>{ if(simonActive) setPhase('input'); }, seq.length*650+250);
+  }
+
+  function handlePadClick(padIdx) {
+    if(!simonActive || phase!=='input') return;
+    flashPad(padIdx,200);
+    playerInput=[...playerInput,padIdx]; updateDots();
+    const step=playerInput.length-1;
+    if(playerInput[step]!==sequence[step]){setPhase('fail');setTimeout(()=>playSequence(sequence),1200);return;}
+    if(playerInput.length===sequence.length){
+      setPhase('success');
+      const nextRound=round+1;
+      if(nextRound>totalRounds){if(!completed){completed=true;setTimeout(onComplete,800);}return;}
+      round=nextRound; roundText.innerHTML=`ROUND <strong style="color:${glowColor}">${round}</strong>/${totalRounds}`;
+      setTimeout(()=>{
+        const nextSeq=[...sequence,Math.floor(Math.random()*4)];
+        sequence=nextSeq; seqText.innerHTML=`LENGTH <strong style="color:#fff">${nextSeq.length}</strong>`;
+        playSequence(nextSeq);
+      },1100);
+    }
+  }
+
+  const init=[];
+  for(let i=0;i<startLength;i++) init.push(Math.floor(Math.random()*4));
+  sequence=init; padEls.forEach(p=>p.disabled=true);
+  setTimeout(()=>{ if(simonActive) playSequence(init); },900); updateDots();
+  container.append(statusEl, gridEl, progressDots);
+}
+
+// ============================================================
+// REACTION GAME — FIX: explicit failure feedback when misses exceeded
+// ============================================================
+function buildReaction(container, params, glowColor, onComplete) {
+  const { targetCount, spawnInterval, lifetime } = params;
+  let score=0, missed=0, spawned=0, completed=false;
+  const maxMisses = Math.floor(targetCount * 0.4);
+  let spawnId=null;
+
+  const statusEl = el('div', {style:{display:'flex',gap:'2rem',fontSize:'0.8rem',color:'rgba(255,255,255,0.55)',marginBottom:'0.75rem',fontFamily:'var(--font-mono)'}});
+  const scoreText=el('span',{}); scoreText.innerHTML=`HIT <strong style="color:${glowColor}">0</strong>/${targetCount}`;
+  const missText=el('span',{}); missText.innerHTML=`MISSED <strong style="color:#ef4444">0</strong>/${maxMisses}`;
+  statusEl.append(scoreText, missText);
+
+  const arena = el('div', {className:'reaction-arena'});
+
+  const startBtn = el('button', {style:{
+    position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',
+    borderRadius:'99px',border:`2px solid ${glowColor}60`,backgroundColor:`${glowColor}18`,
+    color:'#fff',padding:'0.75rem 2rem',fontWeight:'700',fontSize:'1rem',
+    cursor:'pointer',zIndex:'10',fontFamily:'var(--font-display)',letterSpacing:'0.1em'
+  }});
+  startBtn.textContent = '▶ ACTIVATE';
+  startBtn.addEventListener('click', ()=>{ startBtn.remove(); startGame(); });
+  arena.appendChild(startBtn);
+
+  function checkMissFail() {
+    if (missed >= maxMisses && !completed) {
+      completed = true;
+      clearInterval(spawnId);
+      // Remove all remaining targets
+      arena.querySelectorAll('.reaction-target').forEach(t => t.remove());
+      // Show hull breach overlay
+      const failMsg = el('div', {style:{
+        position:'absolute',inset:'0',display:'flex',flexDirection:'column',
+        alignItems:'center',justifyContent:'center',gap:'8px',
+        background:'rgba(0,0,0,0.75)',borderRadius:'0.75rem',zIndex:'20'
+      }});
+      failMsg.appendChild(el('span',{style:{fontSize:'1.6rem'}},'💥'));
+      failMsg.appendChild(el('p',{style:{
+        fontFamily:'var(--font-mono)',fontSize:'0.85rem',color:'#ef4444',
+        letterSpacing:'0.1em',textTransform:'uppercase'
+      }},'HULL INTEGRITY LOST'));
+      failMsg.appendChild(el('p',{style:{
+        fontFamily:'var(--font-mono)',fontSize:'0.7rem',color:'rgba(255,255,255,0.35)'
+      }},`${missed} contacts undefended`));
+      arena.appendChild(failMsg);
+      // Still count as complete so the timer handles the game-over, just show feedback
+      // Actually mark complete and call onComplete after a beat so player sees it
+      setTimeout(() => { onComplete(); }, 1800);
+    }
+  }
+
+  function startGame() {
+    spawnId = setInterval(()=>{
+      if(spawned >= targetCount + maxMisses){
+        clearInterval(spawnId);
+        setTimeout(()=>{
+          if(!completed){
+            completed=true;
+            if(score>=targetCount){ onComplete(); }
+          }
+        }, lifetime + 500);
+        return;
+      }
+      spawnTarget(); spawned++;
+    }, spawnInterval);
+    registerCleanup(()=>{ clearInterval(spawnId); completed=true; });
+  }
+
+  const EMOJIS_BY_LEVEL = ['⚡','☠️','🔴','💥','⚠️','🩸','👁️'];
+  function spawnTarget() {
+    const size=56;
+    const aW=arena.offsetWidth||600, aH=arena.offsetHeight||300;
+    const x=size/2+Math.random()*(aW-size), y=size/2+Math.random()*(aH-size);
+    const emoji = EMOJIS_BY_LEVEL[state.currentLevel % EMOJIS_BY_LEVEL.length];
+
+    const t = el('div', {className:'reaction-target', style:{
+      left:x+'px',top:y+'px',
+      borderColor:`${glowColor}80`, backgroundColor:`${glowColor}15`,
+      '--tglow':glowColor,
+      animation:'target-spawn 0.2s ease, target-pulse 0.8s ease-in-out infinite 0.2s'
+    }}, emoji);
+
+    const ring = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    ring.style.cssText='position:absolute;inset:-8px;width:calc(100%+16px);height:calc(100%+16px);pointer-events:none;';
+    ring.setAttribute('viewBox','0 0 72 72');
+    const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circle.setAttribute('cx','36'); circle.setAttribute('cy','36'); circle.setAttribute('r','34');
+    circle.setAttribute('fill','none'); circle.setAttribute('stroke',glowColor); circle.setAttribute('stroke-width','1.5');
+    circle.setAttribute('stroke-dasharray','213'); circle.setAttribute('stroke-dashoffset','0');
+    circle.style.transition=`stroke-dashoffset ${lifetime}ms linear`;
+    ring.appendChild(circle); t.appendChild(ring);
+    setTimeout(()=>{ circle.style.strokeDashoffset='213'; }, 50);
+
+    t.addEventListener('click', e=>{
+      e.stopPropagation(); t.remove();
+      score++; scoreText.innerHTML=`HIT <strong style="color:${glowColor}">${score}</strong>/${targetCount}`;
+      const pop = el('div', {style:{
+        position:'absolute',left:x+'px',top:(y-20)+'px',
+        color:glowColor,fontFamily:'var(--font-mono)',fontSize:'0.8rem',fontWeight:'700',
+        pointerEvents:'none',animation:'fade-in-up 0.6s ease forwards',zIndex:'20'
+      }},'+1');
+      arena.appendChild(pop); setTimeout(()=>pop.remove(),600);
+      if(score>=targetCount&&!completed){completed=true;clearInterval(spawnId);setTimeout(onComplete,500);}
+    });
+
+    arena.appendChild(t);
+    setTimeout(()=>{
+      if(t.parentNode===arena){
+        t.remove();
+        missed++;
+        missText.innerHTML=`MISSED <strong style="color:#ef4444">${missed}</strong>/${maxMisses}`;
+        checkMissFail();
+      }
+    }, lifetime);
+  }
+
+  container.append(statusEl, arena);
+}
+
+// ============================================================
+// WORD SCRAMBLE
+// ============================================================
+function buildWordScramble(container, params, glowColor, onComplete) {
+  const { words } = params;
+  let currentIdx=0, solvedCount=0, completed=false, wsActive=true;
+  registerCleanup(() => { wsActive = false; completed = true; });
+
+  const wrap = el('div', {style:{display:'flex',flexDirection:'column',alignItems:'center',gap:'1.25rem'}});
+
+  const progressWrap = el('div', {style:{display:'flex',flexDirection:'column',alignItems:'center',gap:'0.5rem',width:'100%'}});
+  const solvedText = el('span', {style:{fontSize:'0.8rem',color:'rgba(255,255,255,0.5)',fontFamily:'var(--font-mono)'}});
+  solvedText.innerHTML=`DECODED <strong style="color:${glowColor}">0</strong>/${words.length}`;
+  const segRow = el('div', {style:{display:'flex',gap:'6px'}});
+  const segs = words.map(()=>{
+    const s=el('div',{style:{height:'4px',width:'50px',borderRadius:'99px',backgroundColor:'rgba(255,255,255,0.1)',transition:'all 0.3s'}});
+    segRow.appendChild(s); return s;
+  });
+  progressWrap.append(solvedText, segRow);
+
+  const scrambleRow = el('div', {className:'scramble-letters'});
+  const hintEl = el('p', {style:{fontSize:'0.875rem',color:'rgba(251,191,36,0.9)',fontStyle:'italic',minHeight:'1.3em',fontFamily:'var(--font-body)'}});
+  const hintBtn = el('button', {style:{fontSize:'0.8rem',color:'rgba(255,255,255,0.3)',transition:'color 0.2s',fontFamily:'var(--font-mono)'}}, '[ HINT ]');
+  hintBtn.addEventListener('mouseenter',()=>hintBtn.style.color='rgba(255,255,255,0.6)');
+  hintBtn.addEventListener('mouseleave',()=>hintBtn.style.color='rgba(255,255,255,0.3)');
+  hintBtn.addEventListener('click',()=>{ hintEl.textContent='Hint: '+words[currentIdx].hint; hintBtn.style.display='none'; });
+
+  const inputEl = el('input', {type:'text', placeholder:'TYPE ANSWER', style:{width:'220px',letterSpacing:'0.2em'}});
+  const submitBtn = el('button', {style:{
+    borderRadius:'0.5rem',border:`1px solid ${glowColor}50`,
+    backgroundColor:`${glowColor}18`,color:'#fff',
+    padding:'0.75rem 1.5rem',fontWeight:'700',fontFamily:'var(--font-mono)',fontSize:'0.85rem'
+  }}, 'SUBMIT');
+  submitBtn.addEventListener('mouseenter',()=>submitBtn.style.backgroundColor=`${glowColor}35`);
+  submitBtn.addEventListener('mouseleave',()=>submitBtn.style.backgroundColor=`${glowColor}18`);
+
+  const feedbackEl = el('p', {style:{fontWeight:'700',minHeight:'1.2em',fontSize:'0.9rem',fontFamily:'var(--font-mono)'}});
+
+  function renderWord() {
+    if(currentIdx>=words.length) return;
+    const word=words[currentIdx];
+    scrambleRow.innerHTML='';
+    word.scrambled.split('').forEach((letter,i)=>{
+      scrambleRow.appendChild(el('div',{className:'scramble-letter',style:{
+        borderColor:`${glowColor}40`,backgroundColor:`${glowColor}10`,color:glowColor,
+        animation:`float-particle ${1.5+i*0.25}s ease-in-out infinite`
+      }},letter));
+    });
+    hintEl.textContent=''; hintBtn.style.display='';
+    inputEl.value=''; inputEl.focus();
+  }
+
+  function submit() {
+    if(currentIdx>=words.length) return;
+    const guess = inputEl.value.trim().toUpperCase();
+    if(guess===words[currentIdx].answer) {
+      feedbackEl.textContent='✓ DECODED'; feedbackEl.style.color='#22c55e';
+      inputEl.style.borderColor='#22c55e'; inputEl.style.boxShadow='0 0 20px rgba(34,197,94,0.3)';
+      solvedCount++;
+      solvedText.innerHTML=`DECODED <strong style="color:${glowColor}">${solvedCount}</strong>/${words.length}`;
+      segs[currentIdx].style.backgroundColor=glowColor; segs[currentIdx].style.boxShadow=`0 0 8px ${glowColor}60`;
+      setTimeout(()=>{
+        if(!wsActive) return;
+        feedbackEl.textContent=''; inputEl.style.borderColor=''; inputEl.style.boxShadow='';
+        currentIdx++;
+        if(currentIdx>=words.length&&!completed){completed=true;setTimeout(onComplete,300);}
+        else renderWord();
+      },700);
+    } else {
+      feedbackEl.textContent='✗ INVALID'; feedbackEl.style.color='#ef4444';
+      inputEl.style.borderColor='#ef4444'; inputEl.style.boxShadow='0 0 20px rgba(239,68,68,0.3)';
+      setTimeout(()=>{ feedbackEl.textContent=''; inputEl.style.borderColor=''; inputEl.style.boxShadow=''; },700);
+    }
+  }
+
+  submitBtn.addEventListener('click',submit);
+  inputEl.addEventListener('keydown',e=>{if(e.key==='Enter')submit();});
+  inputEl.addEventListener('input',()=>inputEl.value=inputEl.value.toUpperCase());
+
+  const inputRow=el('div',{style:{display:'flex',gap:'0.75rem',alignItems:'center'}});
+  inputRow.append(inputEl,submitBtn);
+
+  wrap.append(progressWrap, scrambleRow, hintEl, hintBtn, inputRow, feedbackEl);
+  container.appendChild(wrap);
+  renderWord();
+}
+
+// ============================================================
+// CODE BREAKER — FIX: legend and status text respect allowRepeats param
+// ============================================================
+function buildCodeBreaker(container, params, glowColor, onComplete) {
+  const { codeLength, maxAttempts, colors } = params;
+  const allowRepeats = params.allowRepeats === true;
+
+  let secret;
+  if (allowRepeats) {
+    secret = Array.from({length: codeLength}, () => colors[Math.floor(Math.random()*colors.length)]);
+  } else {
+    const shuffled = [...colors].sort(()=>Math.random()-0.5);
+    secret = shuffled.slice(0, codeLength);
+  }
+
+  let currentGuess=[], guesses=[], won=false, completed=false, cbActive=true;
+  let usedColorsInGuess = new Set();
+  registerCleanup(() => { cbActive = false; completed = true; won = true; });
+
+  const wrap = el('div', {style:{display:'flex',flexDirection:'column',gap:'0.75rem'}});
+
+  const statusEl = el('div', {style:{fontSize:'0.8rem',color:'rgba(255,255,255,0.5)',display:'flex',gap:'1.5rem',justifyContent:'center',fontFamily:'var(--font-mono)'}});
+  const attemptsText=el('span',{}); attemptsText.innerHTML=`ATTEMPTS <strong style="color:#fff">0</strong>/${maxAttempts}`;
+  // FIX: Show correct rule based on allowRepeats
+  const ruleText=el('span',{style:{color:glowColor,fontSize:'0.75rem'}});
+  ruleText.textContent = allowRepeats ? '🔁 Colors may repeat' : '★ Each color used once';
+  statusEl.append(attemptsText, ruleText);
+
+  const historyEl = el('div', {style:{display:'flex',flexDirection:'column',gap:'5px',maxHeight:'220px',overflowY:'auto',paddingRight:'4px'}});
+
+  const currentRow = el('div', {className:'cb-row', style:{justifyContent:'center',marginTop:'0.5rem'}});
+  const currentPegs = Array.from({length:codeLength},()=>{
+    const p=el('div',{className:'cb-peg',style:{backgroundColor:'rgba(255,255,255,0.06)',borderColor:'rgba(255,255,255,0.15)',cursor:'default'}});
+    return p;
+  });
+  currentPegs.forEach(p=>currentRow.appendChild(p));
+
+  const colorRow = el('div', {style:{display:'flex',gap:'7px',flexWrap:'wrap',justifyContent:'center',marginTop:'0.25rem'}});
+  const colorBtns = {};
+  colors.forEach(c=>{
+    const btn=el('button',{className:'cb-color-btn',style:{backgroundColor:COLOR_MAP[c].bg},title:COLOR_MAP[c].label},c);
+    btn.addEventListener('click',()=>{
+      if(currentGuess.length<codeLength&&!won&&(allowRepeats||!usedColorsInGuess.has(c))){
+        currentGuess.push(c); usedColorsInGuess.add(c);
+        if (!allowRepeats) btn.classList.add('used');
+        updateCurrentRow();
+      }
+    });
+    colorBtns[c]=btn; colorRow.appendChild(btn);
+  });
+
+  const actionsRow = el('div', {style:{display:'flex',gap:'8px',justifyContent:'center',marginTop:'0.25rem'}});
+  const backBtn = el('button', {style:{
+    borderRadius:'0.5rem',border:'1px solid rgba(255,255,255,0.15)',
+    backgroundColor:'rgba(255,255,255,0.06)',color:'rgba(255,255,255,0.65)',
+    padding:'0.5rem 1rem',fontWeight:'600',fontSize:'0.85rem',fontFamily:'var(--font-mono)'
+  }}, '⌫ UNDO');
+  backBtn.addEventListener('click',()=>{
+    if(currentGuess.length>0&&!won){
+      const removed=currentGuess.pop();
+      usedColorsInGuess.delete(removed);
+      if (!allowRepeats) colorBtns[removed].classList.remove('used');
+      updateCurrentRow();
+    }
+  });
+  const submitBtn = el('button', {style:{
+    borderRadius:'0.5rem',border:`1px solid ${glowColor}50`,
+    backgroundColor:`${glowColor}18`,color:'#fff',
+    padding:'0.5rem 1.25rem',fontWeight:'700',fontSize:'0.85rem',fontFamily:'var(--font-mono)'
+  }}, 'SUBMIT');
+  submitBtn.addEventListener('click',submitGuess);
+  actionsRow.append(backBtn, submitBtn);
+
+  // FIX: Legend shows correct rule
+  const legend = el('div', {style:{display:'flex',gap:'12px',justifyContent:'center',fontSize:'0.7rem',color:'rgba(255,255,255,0.35)',fontFamily:'var(--font-mono)',flexWrap:'wrap'}});
+  const lg1=el('span',{}); lg1.innerHTML='<span style="color:#22c55e">●</span> Right spot';
+  const lg2=el('span',{}); lg2.innerHTML='<span style="color:#f59e0b">●</span> Wrong spot';
+  const lg3=el('span',{style:{color: allowRepeats ? 'rgba(6,182,212,0.7)' : 'rgba(255,255,255,0.35)'}});
+  lg3.textContent = allowRepeats ? '🔁 Colors repeat' : '🚫 All unique';
+  legend.append(lg1,lg2,lg3);
+
+  const feedbackEl=el('p',{style:{textAlign:'center',fontWeight:'700',minHeight:'1.2em',fontSize:'0.85rem',fontFamily:'var(--font-mono)'}});
+
+  function updateCurrentRow() {
+    currentPegs.forEach((p,i)=>{
+      if(i<currentGuess.length){
+        p.style.backgroundColor=COLOR_MAP[currentGuess[i]].bg;
+        p.style.borderColor=COLOR_MAP[currentGuess[i]].bg;
+        p.textContent=currentGuess[i];
+        p.style.boxShadow=`0 0 8px ${COLOR_MAP[currentGuess[i]].bg}60`;
+      } else {
+        p.style.backgroundColor='rgba(255,255,255,0.06)';
+        p.style.borderColor='rgba(255,255,255,0.15)';
+        p.textContent=''; p.style.boxShadow='none';
+      }
+    });
+  }
+
+  function submitGuess() {
+    if(!cbActive || currentGuess.length!==codeLength||won) return;
+    const guess=[...currentGuess];
+    let exact=0, close=0;
+    const sCopy=[...secret], gCopy=[...guess];
+    for(let i=0;i<codeLength;i++){
+      if(gCopy[i]===sCopy[i]){exact++;sCopy[i]=null;gCopy[i]=null;}
+    }
+    for(let i=0;i<codeLength;i++){
+      if(gCopy[i]===null) continue;
+      const idx=sCopy.indexOf(gCopy[i]);
+      if(idx!==-1){close++;sCopy[idx]=null;}
+    }
+
+    guesses.push({code:guess,exact,close});
+    attemptsText.innerHTML=`ATTEMPTS <strong style="color:#fff">${guesses.length}</strong>/${maxAttempts}`;
+
+    const row=el('div',{className:'cb-row',style:{justifyContent:'center',opacity:'0',transition:'opacity 0.3s'}});
+    guess.forEach(c=>{
+      row.appendChild(el('div',{className:'cb-peg',style:{
+        backgroundColor:COLOR_MAP[c].bg,borderColor:COLOR_MAP[c].bg,cursor:'default',
+        fontSize:'0.6rem',boxShadow:`0 0 5px ${COLOR_MAP[c].bg}50`
+      }},c));
+    });
+    const hintBox=el('div',{className:'cb-hint'});
+    for(let i=0;i<exact;i++) hintBox.appendChild(el('div',{className:'cb-hint-dot',style:{backgroundColor:'#22c55e',boxShadow:'0 0 5px #22c55e'}}));
+    for(let i=0;i<close;i++) hintBox.appendChild(el('div',{className:'cb-hint-dot',style:{backgroundColor:'#f59e0b'}}));
+    for(let i=0;i<codeLength-exact-close;i++) hintBox.appendChild(el('div',{className:'cb-hint-dot',style:{backgroundColor:'rgba(255,255,255,0.12)'}}));
+    row.appendChild(hintBox);
+    historyEl.appendChild(row);
+    setTimeout(()=>{row.style.opacity='1';},40);
+    historyEl.scrollTop=historyEl.scrollHeight;
+
+    currentGuess=[]; usedColorsInGuess.clear();
+    if (!allowRepeats) colors.forEach(c=>colorBtns[c].classList.remove('used'));
+    updateCurrentRow();
+
+    if(exact===codeLength){
+      won=true; feedbackEl.textContent='✓ SEQUENCE UNLOCKED'; feedbackEl.style.color='#22c55e';
+      if(!completed){completed=true;setTimeout(onComplete,1200);}
+    } else if(guesses.length>=maxAttempts){
+      feedbackEl.innerHTML=`<span style="color:#ef4444">FAILED — Code was: ${secret.join(' ')}</span>`;
+      won=true;
+      setTimeout(()=>{ if(!completed && cbActive){ completed=true; onComplete(); } }, 2500);
+    } else {
+      const rem=maxAttempts-guesses.length;
+      feedbackEl.innerHTML=`<span style="color:rgba(255,255,255,0.45)">${exact} correct · ${close} wrong spot · ${rem} attempt${rem===1?'':'s'} left</span>`;
+    }
+  }
+
+  wrap.append(statusEl, historyEl, currentRow, colorRow, actionsRow, legend, feedbackEl);
+  container.appendChild(wrap);
+}
+
+// ============================================================
+// TREASURE SCREEN
+// ============================================================
+function renderTreasure() {
+  const screen = el('div', {className:'screen', style:{
+    alignItems:'center', justifyContent:'center', background:'#0a0000',
+    minHeight:'100vh'
+  }});
+
+  screen.appendChild(el('div', {className:'overlay', style:{
+    background:'radial-gradient(ellipse at center, rgba(120,60,0,0.2) 0%, rgba(0,0,0,0.85) 70%, black 100%)'
+  }}));
+  screen.appendChild(makeParticles(30,'#f59e0b'));
+
+  const content = el('div', {className:'content', style:{
+    display:'flex', flexDirection:'column', alignItems:'center', gap:'2rem',
+    padding:'2rem', textAlign:'center', animation:'fade-in-up 1s ease both'
+  }});
+
+  content.appendChild(el('p', {style:{
+    fontFamily:'var(--font-mono)', fontSize:'0.7rem', letterSpacing:'0.3em',
+    textTransform:'uppercase', color:'rgba(245,158,11,0.6)'
+  }}, '— 4,000 METERS —'));
+
+  content.appendChild(el('h2', {style:{
+    fontFamily:'var(--font-display)', fontSize:'clamp(1.8rem,5vw,2.8rem)',
+    fontWeight:'900', color:'rgba(255,255,255,0.85)',
+    textShadow:'0 0 40px rgba(245,158,11,0.3)'
+  }}, 'Something Is Down Here'));
+
+  content.appendChild(el('p', {style:{
+    fontFamily:'var(--font-body)', fontSize:'1.05rem', lineHeight:'1.7',
+    color:'rgba(255,255,255,0.6)', maxWidth:'440px', fontStyle:'italic'
+  }}, 'The lights catch it in the silt. It\'s been here longer than anything you\'ve got a word for. Could be nothing. Could be everything. You didn\'t come four thousand meters to turn back now.'));
+
+  const chestCanvas = document.createElement('canvas');
+  chestCanvas.width = 200; chestCanvas.height = 200;
+  chestCanvas.style.cssText = 'cursor:pointer;filter:drop-shadow(0 0 20px rgba(245,158,11,0.4));transition:filter 0.3s;';
+
+  let clicks = state.treasureClicks;
+  let chestOpen = false;
+
+  function drawChest(openAmount = 0) {
+    const ctx = chestCanvas.getContext('2d');
+    const W = 200, H = 200;
+    ctx.clearRect(0, 0, W, H);
+    const cx = W/2, cy = H/2 + 10;
+    const chestW = 110, chestH = 70;
+
+    const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 90);
+    glow.addColorStop(0, `rgba(245,158,11,${0.1 + openAmount*0.3})`);
+    glow.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = glow; ctx.fillRect(0,0,W,H);
+
+    ctx.save();
+    const bodyGrad = ctx.createLinearGradient(cx-chestW/2, cy, cx+chestW/2, cy+chestH);
+    bodyGrad.addColorStop(0, '#8B4513');
+    bodyGrad.addColorStop(0.5, '#6B3410');
+    bodyGrad.addColorStop(1, '#4a2008');
+    ctx.fillStyle = bodyGrad;
+    ctx.beginPath();
+    ctx.roundRect(cx-chestW/2, cy, chestW, chestH, [0,0,8,8]);
+    ctx.fill();
+
+    ctx.strokeStyle = '#B8860B'; ctx.lineWidth = 3;
+    for (let i = 0; i < 3; i++) {
+      const bx = cx - chestW/2 + (i+1) * chestW/4;
+      ctx.beginPath(); ctx.moveTo(bx, cy); ctx.lineTo(bx, cy+chestH); ctx.stroke();
+    }
+    ctx.beginPath(); ctx.moveTo(cx-chestW/2, cy+chestH*0.5); ctx.lineTo(cx+chestW/2, cy+chestH*0.5); ctx.stroke();
+
+    ctx.fillStyle = '#DAA520';
+    ctx.beginPath(); ctx.arc(cx, cy+chestH*0.35, 10, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#B8860B';
+    ctx.beginPath(); ctx.rect(cx-6, cy+chestH*0.35, 12, 12); ctx.fill();
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(-openAmount * Math.PI * 0.55);
+    ctx.translate(-cx, -cy);
+
+    const lidGrad = ctx.createLinearGradient(cx-chestW/2, cy-chestH*0.45, cx+chestW/2, cy);
+    lidGrad.addColorStop(0, '#A0522D');
+    lidGrad.addColorStop(1, '#6B3410');
+    ctx.fillStyle = lidGrad;
+    ctx.beginPath();
+    ctx.moveTo(cx-chestW/2, cy);
+    ctx.lineTo(cx+chestW/2, cy);
+    ctx.lineTo(cx+chestW/2, cy-chestH*0.45);
+    ctx.bezierCurveTo(cx+chestW/2, cy-chestH*0.7, cx-chestW/2, cy-chestH*0.7, cx-chestW/2, cy-chestH*0.45);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#B8860B'; ctx.lineWidth = 2; ctx.stroke();
+
+    ctx.fillStyle = '#DAA520';
+    ctx.beginPath(); ctx.arc(cx-chestW/2+10, cy, 5, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx+chestW/2-10, cy, 5, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    if (openAmount > 0.3) {
+      const goldLight = ctx.createRadialGradient(cx, cy, 0, cx, cy, chestW*0.6);
+      goldLight.addColorStop(0, `rgba(255,215,0,${openAmount*0.5})`);
+      goldLight.addColorStop(0.5, `rgba(245,158,11,${openAmount*0.2})`);
+      goldLight.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = goldLight;
+      ctx.beginPath(); ctx.ellipse(cx, cy+5, chestW*0.45, chestH*0.35, 0, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+
+    if (!chestOpen) {
+      const msgs = ['Click to examine...', 'Click again...', 'Open it...'];
+      const msg = msgs[Math.min(clicks, 2)];
+      ctx.fillStyle = `rgba(245,158,11,${0.5+openAmount*0.3})`;
+      ctx.font = '12px Share Tech Mono, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(msg, cx, H - 15);
+
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath(); ctx.arc(cx-16+i*16, H-5, 3, 0, Math.PI*2);
+        ctx.fillStyle = i < clicks ? '#f59e0b' : 'rgba(255,255,255,0.2)';
+        ctx.fill();
+      }
+    }
+  }
+
+  let targetOpen = 0, currentOpen = 0;
+  let animId;
+  function animate() {
+    currentOpen += (targetOpen - currentOpen) * 0.08;
+    drawChest(currentOpen);
+    animId = requestAnimationFrame(animate);
+  }
+
+  drawChest(0);
+  setTimeout(animate, 100);
+  registerCleanup(() => { if(animId) cancelAnimationFrame(animId); });
+
+  chestCanvas.addEventListener('click', () => {
+    if (chestOpen) return;
+    clicks++;
+    targetOpen = clicks / 3;
+    chestCanvas.style.filter = `drop-shadow(0 0 ${20+clicks*20}px rgba(245,158,11,${0.4+clicks*0.2}))`;
+    chestCanvas.style.animation = `treasure-shake 0.4s ease`;
+    setTimeout(() => chestCanvas.style.animation = '', 400);
+
+    if (clicks >= 3) {
+      chestOpen = true;
+      targetOpen = 1;
+      setTimeout(() => {
+        cancelAnimationFrame(animId);
+        setState({ screen:'revelation', treasureClicks:3 });
+      }, 1800);
+    }
+  });
+
+  chestCanvas.addEventListener('mouseenter', () => {
+    if (!chestOpen) chestCanvas.style.filter = 'drop-shadow(0 0 30px rgba(245,158,11,0.6))';
+  });
+  chestCanvas.addEventListener('mouseleave', () => {
+    if (!chestOpen) chestCanvas.style.filter = `drop-shadow(0 0 ${20+clicks*15}px rgba(245,158,11,${0.4+clicks*0.15}))`;
+  });
+
+  chestCanvas.style.animation = 'treasure-pulse 2s ease-in-out infinite';
+
+  content.appendChild(chestCanvas);
+  screen.appendChild(content);
+  return screen;
+}
+
+// ============================================================
+// DESCENT ANIMATION — FIX: skip button, guard for undefined level
+// ============================================================
+function renderDescent() {
+  const currentLevel = GAME_LEVELS[state.currentLevel];
+  const nextLevelIdx = state.currentLevel + 1;
+  const nextLevel = nextLevelIdx < GAME_LEVELS.length ? GAME_LEVELS[nextLevelIdx] : null;
+  const depthStart = currentLevel?.depthEnd ?? 0;
+  const depthEnd = nextLevel?.depthEnd ?? 8000;
+  const fromColor = currentLevel?.glowColor ?? '#06b6d4';
+  const toColor = nextLevel?.glowColor ?? fromColor;
+  const fromBg = currentLevel?.bgColor ?? '#000';
+  const toBg = nextLevel?.bgColor ?? '#000';
+
+  const screen = el('div', {className:'screen', style:{overflow:'hidden',position:'relative',width:'100%',height:'100vh'}});
+
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;';
+  screen.appendChild(canvas);
+
+  // FIX: Skip descent button
+  const skipBtn = el('button', {className:'btn-skip', onClick() {
+    finished = true;
+    cancelAnimationFrame(rafId);
+    setState({ screen:'level-intro', currentLevel: nextLevelIdx, currentChallenge:0 });
+  }}, 'Skip ▶▶');
+  screen.appendChild(skipBtn);
+
+  const hud = el('div', {style:{
+    position:'absolute',top:0,left:0,right:0,zIndex:20,
+    display:'flex',alignItems:'center',justifyContent:'space-between',
+    padding:'1.25rem 1.5rem',
+    background:'linear-gradient(to bottom, rgba(0,0,0,0.7), transparent)',
+    pointerEvents:'none'
+  }});
+  const depthNum = el('div',{style:{display:'flex',flexDirection:'column',gap:'2px'}});
+  depthNum.appendChild(el('span',{style:{fontFamily:'var(--font-mono)',fontSize:'0.6rem',letterSpacing:'0.25em',color:'rgba(255,255,255,0.35)',textTransform:'uppercase'}},'depth'));
+  const depthVal = el('span',{style:{fontFamily:'var(--font-mono)',fontSize:'1.6rem',fontWeight:'700',color:fromColor,textShadow:`0 0 20px ${fromColor}80`,transition:'color 2s'}},depthStart.toLocaleString()+'m');
+  depthNum.appendChild(depthVal);
+
+  const rightHud = el('div',{style:{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:'2px'}});
+  rightHud.appendChild(el('span',{style:{fontFamily:'var(--font-mono)',fontSize:'0.6rem',letterSpacing:'0.2em',color:'rgba(255,255,255,0.3)',textTransform:'uppercase'}},'entering'));
+  const zoneName = el('span',{style:{fontFamily:'var(--font-display)',fontSize:'1rem',fontWeight:'700',color:'rgba(255,255,255,0)',transition:'color 1.5s',letterSpacing:'0.05em'}},nextLevel?.name??'The Deep');
+  rightHud.appendChild(zoneName);
+  hud.append(depthNum, rightHud);
+  screen.appendChild(hud);
+
+  const banner = el('div',{style:{
+    position:'absolute',bottom:'5%',left:'50%',transform:'translateX(-50%)',
+    zIndex:20,textAlign:'center',opacity:'0',transition:'opacity 1.2s',pointerEvents:'none'
+  }});
+  banner.appendChild(el('p',{style:{fontFamily:'var(--font-mono)',fontSize:'0.7rem',letterSpacing:'0.3em',textTransform:'uppercase',color:'rgba(255,255,255,0.35)',marginBottom:'6px'}},'Now entering'));
+  banner.appendChild(el('p',{style:{fontFamily:'var(--font-display)',fontSize:'1.8rem',fontWeight:'700',color:'#fff',textShadow:`0 0 30px ${toColor}`,letterSpacing:'0.05em'}},nextLevel?.name??'The Depths'));
+  if (nextLevel) banner.appendChild(el('p',{style:{fontFamily:'var(--font-body)',fontStyle:'italic',fontSize:'0.9rem',color:'rgba(255,255,255,0.45)',marginTop:'4px'}},nextLevel.subtitle));
+  screen.appendChild(banner);
+
+  let rafId;
+  const totalDuration = 5500;
+  const startTime = Date.now();
+  const depthRange = depthEnd - depthStart;
+  let arrived=false, finished=false;
+  let scrollY=0, bobAngle=0;
+  const WORLD_H = 5000;
+
+  function hexRGB(h) {
+    if (!h || h[0] !== '#') return [0,0,0];
+    const hex = h.length === 4 ? h[1]+h[1]+h[2]+h[2]+h[3]+h[3] : h.slice(1);
+    return [parseInt(hex.slice(0,2),16)||0, parseInt(hex.slice(2,4),16)||0, parseInt(hex.slice(4,6),16)||0];
+  }
+  function lerp(a,b,t) { return a+(b-a)*t; }
+  function lerpColor(a,b,t) {
+    const [r1,g1,b1]=hexRGB(a),[r2,g2,b2]=hexRGB(b);
+    return `rgb(${Math.round(lerp(r1,r2,t))},${Math.round(lerp(g1,g2,t))},${Math.round(lerp(b1,b2,t))})`;
+  }
+
+  const activeCreatures = nextLevel || currentLevel;
+  const creatures = Array.from({length:20},(_,i)=>({
+    x:Math.random()*900, y:200+Math.random()*(WORLD_H-400),
+    r:4+Math.random()*10, phase:Math.random()*Math.PI*2,
+    speed:0.3+Math.random()*0.6, glow:Math.random()>0.3,
+    emoji: activeCreatures.creatures[i % activeCreatures.creatures.length]?.emoji||'🐟'
+  }));
+  const bubbles = Array.from({length:60},()=>({
+    x:Math.random()*900,y:Math.random()*WORLD_H,
+    r:1+Math.random()*3,speed:0.4+Math.random()*0.8,
+    wobble:Math.random()*Math.PI*2,opacity:0.15+Math.random()*0.45
+  }));
+  const rockSilhouettes = Array.from({length:18},()=>({
+    x:Math.random()*900,y:100+Math.random()*(WORLD_H-200),
+    w:50+Math.random()*140,h:25+Math.random()*70,seed:Math.random()
+  }));
+  const streaks = Array.from({length:25},()=>({
+    x:Math.random()*900,len:25+Math.random()*70,opacity:0.02+Math.random()*0.06,speed:1+Math.random()*2
+  }));
+
+  function draw(ts) {
+    const W=canvas.width=canvas.clientWidth||window.innerWidth;
+    const H=canvas.height=canvas.clientHeight||window.innerHeight;
+    const ctx=canvas.getContext('2d');
+    const elapsed=Date.now()-startTime;
+    const progress=Math.min(elapsed/totalDuration,1);
+    const eased=1-Math.pow(1-progress,3);
+    scrollY=eased*(WORLD_H-H*0.4); bobAngle+=0.02;
+    const currentDepth=Math.floor(depthStart+depthRange*eased);
+    const t=eased;
+
+    const [gr,gg,gb]=hexRGB(fromColor),[tr2,tg2,tb2]=hexRGB(toColor);
+    const cr=Math.round(lerp(gr,tr2,t)),cg=Math.round(lerp(gg,tg2,t)),cb=Math.round(lerp(gb,tb2,t));
+
+    const bg=ctx.createLinearGradient(0,0,0,H);
+    bg.addColorStop(0,lerpColor(fromBg,toBg,t));
+    bg.addColorStop(1,lerpColor(fromBg,'#000000',t));
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+
+    for(let i=0;i<5;i++){
+      const by=((i*H*0.25)-scrollY*0.04)%(H*1.2)-H*0.1;
+      const hg=ctx.createLinearGradient(0,by,0,by+H*0.25);
+      hg.addColorStop(0,'rgba(0,0,0,0)');
+      hg.addColorStop(0.5,`rgba(0,0,0,${0.03+t*0.04})`);
+      hg.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=hg; ctx.fillRect(0,by,W,H*0.25);
+    }
+
+    streaks.forEach(s=>{
+      const vy=(((s.x*7-scrollY*s.speed*1.6)%WORLD_H+WORLD_H)%WORLD_H)*(H/WORLD_H);
+      ctx.strokeStyle=`rgba(${cr},${cg},${cb},${s.opacity})`;
+      ctx.lineWidth=0.8; ctx.beginPath();
+      ctx.moveTo(s.x/900*W,vy); ctx.lineTo(s.x/900*W,vy+s.len); ctx.stroke();
+    });
+
+    rockSilhouettes.forEach(rock=>{
+      const wy=rock.y-scrollY*0.35;
+      if(wy<-rock.h-30||wy>H+30) return;
+      const sx=rock.x/900*W;
+      ctx.beginPath();
+      const pts=5+Math.floor(rock.seed*4);
+      for(let i=0;i<=pts;i++){
+        const px=sx-rock.w/2+(rock.w/pts)*i;
+        const jag=(Math.sin(rock.seed*10+i*2.3)*0.4+0.5);
+        const py=wy+rock.h-rock.h*jag*(i===0||i===pts?0.1:1);
+        i===0?ctx.moveTo(px,wy+rock.h):ctx.lineTo(px,py);
+      }
+      ctx.lineTo(sx+rock.w/2,wy+rock.h); ctx.closePath();
+      ctx.fillStyle=`rgba(${cr},${cg},${cb},${0.04+rock.seed*0.05})`; ctx.fill();
+      ctx.strokeStyle=`rgba(${cr},${cg},${cb},${0.07+rock.seed*0.04})`; ctx.lineWidth=1; ctx.stroke();
+    });
+
+    creatures.forEach((c,i)=>{
+      const wy=c.y-scrollY*0.75;
+      if(wy<-40||wy>H+40) return;
+      const cx2=c.x/900*W+Math.sin(c.phase+ts/1200*c.speed)*20;
+      const cy2=wy+Math.cos(c.phase+ts/900*c.speed)*12;
+      const pulse=0.5+0.5*Math.sin(ts/600+c.phase);
+      if(c.glow){
+        const grd=ctx.createRadialGradient(cx2,cy2,0,cx2,cy2,c.r*5);
+        grd.addColorStop(0,`rgba(${cr},${cg},${cb},${0.25*pulse})`);
+        grd.addColorStop(1,'rgba(0,0,0,0)');
+        ctx.fillStyle=grd; ctx.beginPath(); ctx.arc(cx2,cy2,c.r*5,0,Math.PI*2); ctx.fill();
+      }
+      ctx.font=`${(c.r*1.8+8)*(0.85+0.15*pulse)}px serif`;
+      ctx.globalAlpha=0.35+0.3*pulse;
+      ctx.fillText(c.emoji,cx2-c.r,cy2+c.r*0.4);
+      ctx.globalAlpha=1;
+    });
+
+    bubbles.forEach(b=>{
+      const wy=((b.y-scrollY*1.3)%WORLD_H+WORLD_H)%WORLD_H;
+      const sy=wy>H?wy-WORLD_H:wy;
+      const bx=b.x/900*W+Math.sin(b.wobble+ts/800)*7;
+      ctx.beginPath(); ctx.arc(bx,sy,b.r,0,Math.PI*2);
+      ctx.strokeStyle=`rgba(${cr},${cg},${cb},${b.opacity*(0.5+0.5*Math.sin(ts/500+b.wobble))})`;
+      ctx.lineWidth=0.8; ctx.stroke();
+    });
+
+    ctx.save();
+    for(let rs=0;rs<2;rs++){
+      const rx=rs===0?W*0.06:W*0.94;
+      ctx.globalAlpha=0.08+t*0.06;
+      ctx.strokeStyle=`rgb(${cr},${cg},${cb})`;
+      ctx.lineWidth=3+state.currentLevel*0.8;
+      ctx.beginPath(); ctx.moveTo(rx,0);
+      for(let ry=0;ry<H;ry+=20){
+        ctx.lineTo(rx+Math.sin(ry/80+ts/2000+rs*3)*(20+state.currentLevel*3),ry);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Submarine
+    const subX=W/2, subY=H*0.36+Math.sin(bobAngle)*5;
+    const subW=Math.min(160,W*0.25), subH=subW*0.38;
+
+    ctx.save(); ctx.translate(subX,subY);
+
+    const outerGlow=ctx.createRadialGradient(0,0,subH*0.3,0,0,subW);
+    outerGlow.addColorStop(0,`rgba(${cr},${cg},${cb},0.15)`);
+    outerGlow.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=outerGlow; ctx.beginPath(); ctx.ellipse(0,0,subW,subH*1.5,0,0,Math.PI*2); ctx.fill();
+
+    const coneGrad=ctx.createRadialGradient(0,subH*0.5,0,0,subH*0.5+subH*4,subH*4.5);
+    coneGrad.addColorStop(0,`rgba(${cr},${cg},${cb},0.25)`);
+    coneGrad.addColorStop(0.4,`rgba(${cr},${cg},${cb},0.08)`);
+    coneGrad.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=coneGrad;
+    ctx.beginPath();
+    ctx.moveTo(-subW*0.12,subH*0.5); ctx.lineTo(-subW*0.65,subH*5); ctx.lineTo(subW*0.65,subH*5); ctx.lineTo(subW*0.12,subH*0.5);
+    ctx.closePath(); ctx.fill();
+
+    const frontLight=ctx.createRadialGradient(-subW*0.48,0,0,-subW*0.48,0,subH*2.2);
+    frontLight.addColorStop(0,`rgba(${cr},${cg},${cb},0.35)`);
+    frontLight.addColorStop(0.4,`rgba(${cr},${cg},${cb},0.1)`);
+    frontLight.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=frontLight;
+    ctx.beginPath();
+    ctx.moveTo(-subW*0.44,-subH*0.2); ctx.lineTo(-subW*1.7,-subH*0.7); ctx.lineTo(-subW*1.7,subH*0.7); ctx.lineTo(-subW*0.44,subH*0.2);
+    ctx.closePath(); ctx.fill();
+
+    const hullGrad=ctx.createLinearGradient(0,-subH/2,0,subH/2);
+    hullGrad.addColorStop(0,`rgba(${cr},${cg},${cb},0.25)`);
+    hullGrad.addColorStop(0.3,'rgba(25,35,55,0.97)');
+    hullGrad.addColorStop(0.7,'rgba(15,22,38,0.99)');
+    hullGrad.addColorStop(1,'rgba(8,12,22,0.97)');
+    ctx.fillStyle=hullGrad;
+    ctx.beginPath(); ctx.ellipse(0,0,subW/2,subH/2,0,0,Math.PI*2); ctx.fill();
+
+    const shineGrad=ctx.createLinearGradient(-subW*0.3,-subH*0.35,-subW*0.1,-subH*0.05);
+    shineGrad.addColorStop(0,`rgba(${cr},${cg},${cb},0.18)`);
+    shineGrad.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=shineGrad;
+    ctx.beginPath(); ctx.ellipse(-subW*0.15,-subH*0.2,subW*0.25,subH*0.22,0,0,Math.PI*2); ctx.fill();
+
+    ctx.strokeStyle=`rgba(${cr},${cg},${cb},0.8)`;
+    ctx.lineWidth=1.8;
+    ctx.beginPath(); ctx.ellipse(0,0,subW/2,subH/2,0,0,Math.PI*2); ctx.stroke();
+
+    ctx.fillStyle=`rgba(${cr},${cg},${cb},0.5)`;
+    for(let rv=-3;rv<=3;rv++){
+      const ra=rv*(Math.PI/4);
+      const rvx=(subW/2-5)*Math.cos(ra), rvy=(subH/2-3)*Math.sin(ra);
+      ctx.beginPath(); ctx.arc(rvx,rvy,1.5,0,Math.PI*2); ctx.fill();
+    }
+
+    const towerGrad=ctx.createLinearGradient(subW*0.06,-subH/2-subH*0.7,subW*0.26,-subH/2);
+    towerGrad.addColorStop(0,`rgba(${cr},${cg},${cb},0.3)`);
+    towerGrad.addColorStop(1,'rgba(15,22,38,0.97)');
+    ctx.fillStyle=towerGrad;
+    ctx.strokeStyle=`rgba(${cr},${cg},${cb},0.7)`; ctx.lineWidth=1.5;
+    ctx.beginPath();
+    ctx.roundRect(subW*0.06,-subH/2-subH*0.62,subW*0.2,subH*0.62,4);
+    ctx.fill(); ctx.stroke();
+
+    ctx.beginPath(); ctx.arc(subW*0.16,-subH/2-subH*0.35,subH*0.12,0,Math.PI*2);
+    ctx.fillStyle=`rgba(${cr},${cg},${cb},0.2)`; ctx.fill();
+    ctx.strokeStyle=`rgba(${cr},${cg},${cb},0.6)`; ctx.lineWidth=1.2; ctx.stroke();
+    const twGlow=ctx.createRadialGradient(subW*0.16,-subH/2-subH*0.35,0,subW*0.16,-subH/2-subH*0.35,subH*0.12);
+    twGlow.addColorStop(0,`rgba(${cr},${cg},${cb},0.45)`);
+    twGlow.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=twGlow; ctx.beginPath(); ctx.arc(subW*0.16,-subH/2-subH*0.35,subH*0.12,0,Math.PI*2); ctx.fill();
+
+    ctx.strokeStyle=`rgba(${cr},${cg},${cb},0.55)`; ctx.lineWidth=2; ctx.lineCap='round';
+    ctx.beginPath();
+    ctx.moveTo(subW*0.14,-subH/2-subH*0.62);
+    ctx.lineTo(subW*0.14,-subH/2-subH*0.9);
+    ctx.lineTo(subW*0.25,-subH/2-subH*0.9);
+    ctx.stroke();
+    ctx.beginPath(); ctx.arc(subW*0.25,-subH/2-subH*0.9,3,0,Math.PI*2);
+    ctx.fillStyle=`rgba(${cr},${cg},${cb},0.8)`; ctx.fill();
+
+    for(let a=0;a<3;a++){
+      const ax=subW*0.1+a*subW*0.06, ay=-subH/2;
+      ctx.strokeStyle=`rgba(${cr},${cg},${cb},0.4)`; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(ax+Math.sin(a)*3,ay-subH*0.25); ctx.stroke();
+      ctx.beginPath(); ctx.arc(ax+Math.sin(a)*3,ay-subH*0.25,1.5,0,Math.PI*2);
+      ctx.fillStyle=`rgba(${cr},${cg},${cb},0.7)`; ctx.fill();
+    }
+
+    const pox=-subW*0.2, poy=0;
+    ctx.beginPath(); ctx.arc(pox,poy,subH*0.2,0,Math.PI*2);
+    ctx.fillStyle=`rgba(${cr},${cg},${cb},0.12)`; ctx.fill();
+    ctx.strokeStyle=`rgba(${cr},${cg},${cb},0.75)`; ctx.lineWidth=1.5; ctx.stroke();
+    const pGlow=ctx.createRadialGradient(pox,poy,0,pox,poy,subH*0.2);
+    pGlow.addColorStop(0,`rgba(${cr},${cg},${cb},0.55)`);
+    pGlow.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=pGlow; ctx.beginPath(); ctx.arc(pox,poy,subH*0.2,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle=`rgba(${cr},${cg},${cb},0.25)`; ctx.lineWidth=0.8;
+    ctx.beginPath(); ctx.moveTo(pox-subH*0.18,poy); ctx.lineTo(pox+subH*0.18,poy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pox,poy-subH*0.18); ctx.lineTo(pox,poy+subH*0.18); ctx.stroke();
+
+    const po2x=-subW*0.05, po2y=-subH*0.15;
+    ctx.beginPath(); ctx.arc(po2x,po2y,subH*0.1,0,Math.PI*2);
+    ctx.fillStyle=`rgba(${cr},${cg},${cb},0.08)`; ctx.fill();
+    ctx.strokeStyle=`rgba(${cr},${cg},${cb},0.4)`; ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle=`rgba(${cr},${cg},${cb},0.3)`;
+    ctx.beginPath(); ctx.arc(po2x,po2y,subH*0.1,0,Math.PI*2); ctx.fill();
+
+    ctx.strokeStyle=`rgba(${cr},${cg},${cb},0.12)`; ctx.lineWidth=0.8; ctx.setLineDash([4,6]);
+    ctx.beginPath(); ctx.ellipse(0,0,subW*0.32,subH*0.5,0,0,Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(0,0,subW*0.15,subH*0.5,0,0,Math.PI*2); ctx.stroke();
+    ctx.setLineDash([]);
+
+    const propX=subW*0.48, propRot=ts/180;
+    ctx.save(); ctx.translate(propX,0);
+    ctx.fillStyle='rgba(15,22,38,0.9)'; ctx.strokeStyle=`rgba(${cr},${cg},${cb},0.5)`; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.arc(0,0,subH*0.22,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    for(let b=0;b<4;b++){
+      const ba=propRot+b*Math.PI/2;
+      ctx.save(); ctx.rotate(ba);
+      const bladeGrad=ctx.createLinearGradient(0,0,0,subH*0.38);
+      bladeGrad.addColorStop(0,`rgba(${cr},${cg},${cb},0.7)`);
+      bladeGrad.addColorStop(1,`rgba(${cr},${cg},${cb},0.1)`);
+      ctx.fillStyle=bladeGrad;
+      ctx.beginPath();
+      ctx.moveTo(-subH*0.06,0);
+      ctx.bezierCurveTo(-subH*0.1,subH*0.18,subH*0.1,subH*0.35,subH*0.06,subH*0.38);
+      ctx.bezierCurveTo(-subH*0.02,subH*0.3,subH*0.06,subH*0.15,subH*0.06,0);
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+    ctx.fillStyle=`rgba(${cr},${cg},${cb},0.8)`; ctx.beginPath(); ctx.arc(0,0,4,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    for(let ex=0;ex<6;ex++){
+      const ebx=propX+8+ex*9+Math.sin(ts/250+ex*1.3)*5;
+      const eby=Math.sin(ts/180+ex*1.8)*subH*0.28;
+      const er=2.5-ex*0.3;
+      if(er<=0) continue;
+      ctx.beginPath(); ctx.arc(ebx,eby,er,0,Math.PI*2);
+      ctx.fillStyle=`rgba(${cr},${cg},${cb},${0.45-ex*0.07})`; ctx.fill();
+    }
+
+    ctx.restore();
+
+    const vig=ctx.createRadialGradient(W/2,H/2,H*0.22,W/2,H/2,H*0.85);
+    vig.addColorStop(0,'rgba(0,0,0,0)');
+    vig.addColorStop(1,'rgba(0,0,0,0.75)');
+    ctx.fillStyle=vig; ctx.fillRect(0,0,W,H);
+
+    ctx.save(); ctx.globalAlpha=0.04+t*0.04;
+    for(let sl=0;sl<H;sl+=4){
+      ctx.fillStyle='rgba(0,0,0,0.5)';
+      ctx.fillRect(0,sl,W,2);
+    }
+    ctx.restore();
+
+    depthVal.textContent=currentDepth.toLocaleString()+'m';
+    depthVal.style.color=`rgba(${cr},${cg},${cb},1)`;
+    depthVal.style.textShadow=`0 0 20px rgba(${cr},${cg},${cb},0.8)`;
+
+    if(eased>0.72&&!arrived){
+      arrived=true;
+      zoneName.style.color=`rgba(${cr},${cg},${cb},1)`;
+      banner.style.opacity='1';
+    }
+
+    if(!finished){ rafId=requestAnimationFrame(draw); }
+    if(progress>=1&&!finished){
+      finished=true; cancelAnimationFrame(rafId);
+      const dTimeoutId = setTimeout(()=>{
+        setState({ screen:'level-intro', currentLevel:nextLevelIdx, currentChallenge:0 });
+      },1800);
+      registerCleanup(() => clearTimeout(dTimeoutId));
+    }
+  }
+
+  const firstRafId = requestAnimationFrame(draw);
+  registerCleanup(() => {
+    finished = true;
+    cancelAnimationFrame(rafId);
+    cancelAnimationFrame(firstRafId);
+  });
+
+  return screen;
+}
+
+// ============================================================
+// GAME OVER — FIX: Retry Challenge button in addition to full restart
+// ============================================================
+function renderGameOver() {
+  const level = getLevel();
+  const depth = level?.depthEnd ?? 0;
+
+  const screen = el('div', {className:'screen', style:{alignItems:'center', justifyContent:'center', background:'#080000'}});
+  screen.appendChild(el('div', {className:'overlay', style:{background:'radial-gradient(ellipse at center, rgba(100,0,0,0.25) 0%, rgba(0,0,0,0.9) 70%, black 100%)'}}));
+  screen.appendChild(el('div', {className:'scanlines'}));
+
+  const flash = el('div', {className:'overlay', style:{backgroundColor:'rgba(185,28,28,0.35)',opacity:'1',transition:'opacity 0.6s'}});
+  screen.appendChild(flash);
+  setTimeout(()=>flash.style.opacity='0',400);
+
+  const content = el('div', {className:'content', style:{
+    display:'flex',flexDirection:'column',alignItems:'center',gap:'2rem',
+    padding:'2rem',textAlign:'center',maxWidth:'480px',
+    animation:'fade-in-up 0.8s 0.4s both'
+  }});
+
+  const iconWrap = el('div', {style:{position:'relative'}});
+  const iconCircle = el('div', {style:{
+    width:'88px',height:'88px',borderRadius:'50%',
+    border:'2px solid rgba(239,68,68,0.4)',backgroundColor:'rgba(239,68,68,0.08)',
+    display:'flex',alignItems:'center',justifyContent:'center',fontSize:'2.5rem'
+  }}, '☠');
+  iconWrap.append(iconCircle, el('div',{style:{position:'absolute',inset:'0',borderRadius:'50%',border:'1px solid rgba(239,68,68,0.2)',animation:'pulse-ring 1.5s ease-in-out infinite'}}));
+
+  const title = el('div', {});
+  title.appendChild(el('h2', {style:{fontFamily:'var(--font-display)',fontSize:'clamp(2rem,7vw,3.5rem)',fontWeight:'900',color:'#f87171',textShadow:'0 0 50px rgba(239,68,68,0.5)',letterSpacing:'0.05em'}}, 'HULL BREACH'));
+  title.appendChild(el('p', {style:{fontFamily:'var(--font-mono)',fontSize:'0.7rem',letterSpacing:'0.15em',textTransform:'uppercase',color:'rgba(248,113,113,0.4)',marginTop:'4px'}}, `NEN depleted at ${depth.toLocaleString()}m — Malice prevails`));
+
+  const msgBox = el('div', {style:{borderRadius:'0.75rem',border:'1px solid rgba(239,68,68,0.15)',backgroundColor:'rgba(0,0,0,0.7)',padding:'1.5rem',backdropFilter:'blur(10px)'}});
+  msgBox.appendChild(el('p', {style:{fontFamily:'var(--font-body)',lineHeight:'1.75',color:'rgba(255,255,255,0.65)',fontSize:'1rem'}},
+    'The Nen ran out. Simple as that. One moment the instruments were reading, the next they weren\'t, and the dark just — came in. The roots are still rotting. Whatever lives at the bottom is still sleeping. Nobody up top knows how close it got.'));
+  msgBox.appendChild(el('p', {style:{marginTop:'0.75rem',fontSize:'0.875rem',color:'rgba(255,255,255,0.3)',fontStyle:'italic',fontFamily:'var(--font-body)'}},
+    state.failedAttempts>1 ? `${state.failedAttempts} attempts. The water doesn't keep count but you do.` : 'The island will keep sinking. Slowly. No one will know why.'));
+
+  const statsRow = el('div', {style:{display:'flex',gap:'2rem',fontSize:'0.8rem',color:'rgba(255,255,255,0.4)',fontFamily:'var(--font-mono)'}});
+  [[state.currentLevel+1,'Zone'],[depth.toLocaleString()+'m','Depth'],[state.failedAttempts,'Attempts']].forEach(([v,l])=>{
+    const s=el('div',{style:{display:'flex',flexDirection:'column',alignItems:'center',gap:'2px'}});
+    s.appendChild(el('span',{style:{fontFamily:'var(--font-mono)',fontSize:'1.2rem',fontWeight:'700',color:'rgba(255,255,255,0.75)'}},String(v)));
+    s.appendChild(el('span',{},l));
+    statsRow.appendChild(s);
+  });
+
+  // FIX: Two buttons — retry same challenge, or full restart
+  const btnsRow = el('div', {style:{display:'flex',gap:'1rem',flexWrap:'wrap',justifyContent:'center'}});
+
+  const retryBtn = el('button', {
+    className:'btn-primary',
+    style:{borderColor:'rgba(239,68,68,0.5)',backgroundColor:'rgba(239,68,68,0.15)',fontFamily:'var(--font-display)',letterSpacing:'0.08em',fontSize:'0.9rem'},
+    onClick() {
+      setState({
+        screen:'challenge',
+        failedAttempts: state.failedAttempts,
+        // currentLevel and currentChallenge preserved — retry the same challenge
+      });
+    }
+  }, '↺ Retry Challenge');
+  retryBtn.appendChild(el('div', {className:'shimmer'}));
+  retryBtn.addEventListener('mouseenter',()=>{retryBtn.style.backgroundColor='rgba(239,68,68,0.28)';});
+  retryBtn.addEventListener('mouseleave',()=>{retryBtn.style.backgroundColor='rgba(239,68,68,0.15)';});
+
+  const restartBtn = el('button', {
+    style:{
+      borderRadius:'99px',border:'1px solid rgba(255,255,255,0.12)',
+      backgroundColor:'rgba(255,255,255,0.04)',color:'rgba(255,255,255,0.5)',
+      padding:'0.9rem 1.75rem',fontWeight:'600',cursor:'pointer',
+      transition:'all 0.2s',fontFamily:'var(--font-display)',letterSpacing:'0.08em',fontSize:'0.9rem'
+    },
+    onClick() {
+      setState({screen:'start',currentLevel:0,currentChallenge:0,completedLevels:[],startTime:null,challengeKey:0,nenLevel:100,failedAttempts:0});
+    }
+  }, '⬆ Return to Surface');
+  restartBtn.addEventListener('mouseenter',()=>{restartBtn.style.backgroundColor='rgba(255,255,255,0.1)';restartBtn.style.color='rgba(255,255,255,0.8)';});
+  restartBtn.addEventListener('mouseleave',()=>{restartBtn.style.backgroundColor='rgba(255,255,255,0.04)';restartBtn.style.color='rgba(255,255,255,0.5)';});
+
+  btnsRow.append(retryBtn, restartBtn);
+
+  content.append(iconWrap, title, msgBox, statsRow, btnsRow);
+  screen.appendChild(content);
+  return screen;
+}
+
+// ============================================================
+// REVELATION SCREEN — FIX: skip button to jump to choices
+// ============================================================
+function renderRevelation() {
+  const screen = el('div', {className:'screen', style:{background:'#060000', minHeight:'100vh'}});
+
+  const bgCanvas = document.createElement('canvas');
+  bgCanvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;';
+  screen.appendChild(bgCanvas);
+
+  let revRafId = null;
+  function drawRevBg(ts) {
+    const W=bgCanvas.width=bgCanvas.offsetWidth||window.innerWidth;
+    const H=bgCanvas.height=bgCanvas.offsetHeight||window.innerHeight;
+    const ctx=bgCanvas.getContext('2d');
+    ctx.clearRect(0,0,W,H);
+
+    const pulse=0.5+0.5*Math.sin(ts/2000);
+    const bg=ctx.createRadialGradient(W/2,H,0,W/2,H,H*1.2);
+    bg.addColorStop(0,`rgba(120,0,0,${0.08+pulse*0.05})`);
+    bg.addColorStop(0.5,`rgba(60,0,0,${0.04+pulse*0.02})`);
+    bg.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+
+    ctx.save(); ctx.globalAlpha=0.06+pulse*0.03;
+    ctx.strokeStyle='#ef4444'; ctx.lineWidth=2;
+    for(let t2=0;t2<3;t2++){
+      const tx2=t2===0?W*0.05:t2===1?W*0.95:W*0.5;
+      ctx.beginPath(); ctx.moveTo(tx2,H);
+      for(let y=H;y>=0;y-=15){
+        ctx.lineTo(tx2+Math.sin(y/100+ts/3000+t2*2)*(25+t2*10),y);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+    revRafId = requestAnimationFrame(drawRevBg);
+  }
+  revRafId = requestAnimationFrame(drawRevBg);
+  registerCleanup(() => { if(revRafId) cancelAnimationFrame(revRafId); });
+
+  screen.appendChild(el('div',{className:'overlay',style:{background:'radial-gradient(ellipse at center, transparent 20%, rgba(0,0,0,0.6) 70%, black 100%)',zIndex:1,pointerEvents:'none'}}));
+
+  // FIX: skip button — jumps straight to choice section
+  let revTimeouts = [];
+  const skipBtn = el('button', {className:'btn-skip', onClick() {
+    // Clear all pending timeouts
+    revTimeouts.forEach(t => clearTimeout(t));
+    revTimeouts = [];
+    // Reveal all text immediately
+    textEls.forEach(p => { p.style.opacity='1'; p.style.transform='translateY(0)'; });
+    choiceSection.style.opacity='1';
+    setTimeout(() => {
+      choiceSection.scrollIntoView({behavior:'smooth',block:'center'});
+    }, 100);
+    skipBtn.remove();
+  }}, 'Skip to Choice ▶▶');
+  screen.appendChild(skipBtn);
+
+  const content = el('div', {className:'content', style:{
+    display:'flex',flexDirection:'column',alignItems:'center',gap:'2rem',
+    padding:'5rem 1.5rem 4rem', textAlign:'center', minHeight:'100vh', zIndex:10
+  }});
+
+  content.appendChild(el('div',{style:{
+    fontFamily:'var(--font-mono)',fontSize:'0.7rem',letterSpacing:'0.35em',
+    textTransform:'uppercase',color:'rgba(239,68,68,0.5)',
+    border:'1px solid rgba(239,68,68,0.2)',borderRadius:'99px',
+    padding:'0.4rem 1.25rem',backgroundColor:'rgba(239,68,68,0.06)'
+  }},'8,000 METERS — THE BOTTOM'));
+
+  const textWrap = el('div', {style:{display:'flex',flexDirection:'column',alignItems:'center',gap:'1.75rem',maxWidth:'700px'}});
+  const textEls = REVELATION_STAGES.map((stage,i)=>{
+    let style={};
+    if(i===0||i===1) style={fontFamily:'var(--font-mono)',fontSize:'0.9rem',letterSpacing:'0.35em',textTransform:'uppercase',color:'rgba(255,255,255,0.35)',opacity:'0',transform:'translateY(12px)',transition:'all 1s ease'};
+    else if(i===4||i===7||i===8) style={fontFamily:'var(--font-display)',fontSize:'clamp(1.6rem,4vw,2.4rem)',fontWeight:'700',color:'#f87171',lineHeight:'1.2',textShadow:'0 0 50px rgba(239,68,68,0.4)',opacity:'0',transform:'translateY(12px)',transition:'all 1.2s ease'};
+    else if(i===9) style={fontFamily:'var(--font-body)',fontStyle:'italic',fontSize:'1.1rem',color:'rgba(255,255,255,0.5)',opacity:'0',transform:'translateY(12px)',transition:'all 1s ease'};
+    else style={fontFamily:'var(--font-body)',fontSize:'1.1rem',lineHeight:'1.8',color:'rgba(255,255,255,0.72)',maxWidth:'620px',opacity:'0',transform:'translateY(12px)',transition:'all 1.1s ease'};
+    const p=el('p',{style}, stage.text);
+    textWrap.appendChild(p);
+    return p;
+  });
+  content.appendChild(textWrap);
+
+  const choiceSection = el('div', {style:{opacity:'0',transition:'opacity 1.5s ease',marginTop:'3rem',display:'flex',flexDirection:'column',alignItems:'center',gap:'2rem'}});
+
+  const choiceTitle = el('p', {style:{fontFamily:'var(--font-mono)',fontSize:'0.7rem',letterSpacing:'0.3em',textTransform:'uppercase',color:'rgba(255,255,255,0.3)'}}, 'Choose your fate');
+
+  const choiceRow = el('div', {style:{display:'flex',gap:'1.5rem',flexWrap:'wrap',justifyContent:'center'}});
+
+  function makeChoiceBtn(choiceType, accent, icon, heading, subtext) {
+    const btn = el('button', {className:'choice-btn', style:{borderColor:`${accent}30`,backgroundColor:`${accent}08`,color:'#fff',maxWidth:'280px'}});
+    btn.innerHTML=`
+      <div style="width:52px;height:52px;border-radius:50%;border:1px solid ${accent}40;background:${accent}18;display:flex;align-items:center;justify-content:center;font-size:1.5rem;">${icon}</div>
+      <h3 style="font-family:var(--font-display);font-size:1.2rem;font-weight:700;color:${accent};letter-spacing:0.05em;">${heading}</h3>
+      <p style="font-family:var(--font-body);font-size:0.9rem;line-height:1.6;color:rgba(255,255,255,0.5);">${subtext}</p>`;
+    btn.addEventListener('mouseenter',()=>{btn.style.borderColor=`${accent}60`;btn.style.backgroundColor=`${accent}18`;btn.style.boxShadow=`0 0 50px ${accent}20`;});
+    btn.addEventListener('mouseleave',()=>{btn.style.borderColor=`${accent}30`;btn.style.backgroundColor=`${accent}08`;btn.style.boxShadow='';});
+    btn.addEventListener('click',()=>showEnding(choiceType, endingSection));
+    return btn;
+  }
+
+  const sacrificeBtn = makeChoiceBtn('sacrifice','#22d3ee','✦','Let Go','Put everything left into one burst. All the Nen, all of it. Seal it back into sleep. You won\'t make it back up. But everyone up there will wake up tomorrow and never know this happened.');
+  const mergeBtn = makeChoiceBtn('merge','#ef4444','∞','Open the Hatch','Let it in. See what you become. Ten million years of memory is a lot to carry — but you won\'t be carrying it alone.');
+  choiceRow.append(sacrificeBtn, mergeBtn);
+
+  const endingSection = el('div', {style:{opacity:'0',transition:'opacity 2s ease',maxWidth:'640px',textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:'1.5rem',marginTop:'1rem'}});
+  choiceSection.append(choiceTitle, choiceRow, endingSection);
+  content.appendChild(choiceSection);
+  screen.appendChild(content);
+
+  // Staggered reveal
+  REVELATION_STAGES.forEach((stage,i)=>{
+    const tId = setTimeout(()=>{
+      textEls[i].style.opacity='1';
+      textEls[i].style.transform='translateY(0)';
+    }, stage.delay);
+    revTimeouts.push(tId);
+  });
+  const choiceTimeout = setTimeout(()=>{
+    choiceSection.style.opacity='1';
+    skipBtn.remove();
+    choiceSection.scrollIntoView({behavior:'smooth',block:'center'});
+  }, 27000);
+  revTimeouts.push(choiceTimeout);
+  registerCleanup(() => revTimeouts.forEach(t => clearTimeout(t)));
+
+  return screen;
+}
+
+function showEnding(choice, endingSection) {
+  endingSection.innerHTML='';
+  const accent = choice==='sacrifice'?'#22d3ee':'#fca5a5';
+  const divider = el('div',{style:{height:'1px',width:'200px',background:`linear-gradient(to right,transparent,${accent},transparent)`,margin:'0 auto'}});
+
+  let data;
+  if(choice==='sacrifice'){
+    data = {
+      quote:'"I went down so they could stay up."',
+      story:'You put everything into it. Every last bit of Nen — the reserves you\'d been rationing since zone two, the dregs you didn\'t think would matter. One pulse. The thing shudders. You feel it through the floor of the bathysphere, through your feet, through your teeth. Then it goes still. Not dead. Just — back under. Dreaming again. The instruments flicker back on. The hull holds. You don\'t.',
+      epilogue:'They\'ll notice a tremor on the seismographs. A few researchers will write papers. The island stops sinking that afternoon and nobody can explain it.',
+      quoteColor:'#22d3ee'
+    };
+  } else {
+    data = {
+      quote:'"It wasn\'t what I expected. Nothing that big ever is."',
+      story:'The hatch opens. The water comes in and it\'s warm — warmer than it should be at four thousand meters — and it doesn\'t kill you. It just fills in the gaps. Suddenly you know what the carvings were for. You know who made them and why they stopped. You know there are eleven others like this one, scattered under eleven other islands, and they\'ve been waiting a long time for someone to knock. The bathysphere dissolves around you. You don\'t need it anymore.',
+      epilogue:'The island moves. Not much — just enough that people notice. By morning the coastline has shifted. By evening nobody can agree on what the maps used to say.',
+      quoteColor:'#fca5a5'
+    };
+  }
+
+  const quoteEl = el('p',{style:{fontFamily:'var(--font-display)',fontSize:'clamp(1.1rem,3vw,1.5rem)',fontWeight:'700',color:data.quoteColor,lineHeight:'1.4',fontStyle:'italic'}},data.quote);
+  const storyEl = el('p',{style:{fontFamily:'var(--font-body)',lineHeight:'1.8',color:'rgba(255,255,255,0.7)',fontSize:'1.05rem'}},data.story);
+  const epilogueEl = el('p',{style:{fontSize:'0.9rem',color:`${data.quoteColor}80`,fontStyle:'italic',fontFamily:'var(--font-body)'}},data.epilogue);
+
+  const playAgainBtn = el('button',{
+    style:{marginTop:'1.5rem',borderRadius:'99px',border:'1px solid rgba(255,255,255,0.15)',backgroundColor:'rgba(255,255,255,0.04)',color:'rgba(255,255,255,0.7)',padding:'0.75rem 2.5rem',fontWeight:'600',cursor:'pointer',transition:'all 0.2s',fontFamily:'var(--font-display)',letterSpacing:'0.1em',fontSize:'0.9rem'},
+    onClick(){setState({screen:'start',currentLevel:0,currentChallenge:0,completedLevels:[],failedAttempts:0,startTime:null,challengeKey:0,nenLevel:100,treasureClicks:0});}
+  },'Play Again');
+  playAgainBtn.addEventListener('mouseenter',()=>{playAgainBtn.style.backgroundColor='rgba(255,255,255,0.1)';playAgainBtn.style.boxShadow='0 0 30px rgba(255,255,255,0.08)';});
+  playAgainBtn.addEventListener('mouseleave',()=>{playAgainBtn.style.backgroundColor='rgba(255,255,255,0.04)';playAgainBtn.style.boxShadow='';});
+
+  endingSection.append(divider, quoteEl, storyEl, epilogueEl, playAgainBtn);
+  setTimeout(()=>{
+    endingSection.style.opacity='1';
+    endingSection.scrollIntoView({behavior:'smooth',block:'center'});
+  },800);
+}
+
+// ============================================================
+// POLYFILL
+// ============================================================
+if(!CanvasRenderingContext2D.prototype.roundRect){
+  CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
+    if(Array.isArray(r)){const[r0,r1,r2,r3]=r.length>=4?r:r.length>=3?[r[0],r[1],r[2],r[1]]:r.length>=2?[r[0],r[1],r[0],r[1]]:[r[0],r[0],r[0],r[0]];
+    this.beginPath();this.moveTo(x+r0,y);this.arcTo(x+w,y,x+w,y+h,r1);this.arcTo(x+w,y+h,x,y+h,r2);this.arcTo(x,y+h,x,y,r3);this.arcTo(x,y,x+w,y,r0);this.closePath();}
+    else{if(w<2*r)r=w/2;if(h<2*r)r=h/2;this.beginPath();this.moveTo(x+r,y);this.arcTo(x+w,y,x+w,y+h,r);this.arcTo(x+w,y+h,x,y+h,r);this.arcTo(x,y+h,x,y,r);this.arcTo(x,y,x+w,y,r);this.closePath();}
+    return this;
+  };
+}
+
+// ============================================================
+// INIT
+// ============================================================
+render();
+</script>
+</body>
+</html>
